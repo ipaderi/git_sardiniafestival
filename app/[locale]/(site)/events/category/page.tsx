@@ -4,7 +4,8 @@ import publicEn from "@/messages/en/public.json";
 import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
-import { ArrowRight, CalendarDays } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { CategoryIcon } from "@/components/site/category-icon";
 import { eventCategories, categoryName, categoryDetails, slugifyCategory } from "@/lib/event-categories";
 import { getPublicEvents } from "@/lib/public-events";
 
@@ -32,7 +33,7 @@ export default async function CategoriesPage({ params }: Props) {
     <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventCategories.map((category, index) => {
       const count = events.filter((event) => event.category.toLocaleLowerCase("it-IT") === category.name.toLocaleLowerCase("it-IT")).length;
       return <Link key={category.name} href={`/${locale}/events/category/${slugifyCategory(category.name)}`} className="focus-ring group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-sea-bright/50 hover:shadow-md">
-        <span className={`flex size-11 items-center justify-center rounded-2xl ${index % 2 ? "bg-[#fff0e9] text-coral" : "bg-[#e7f5f2] text-sea"}`}><CalendarDays size={20} /></span>
+        <span className={`flex size-11 items-center justify-center rounded-2xl ${index % 2 ? "bg-[#fff0e9] text-coral" : "bg-[#e7f5f2] text-sea"}`}><CategoryIcon slug={slugifyCategory(category.name)} size={20} /></span>
         <h2 className="mt-4 font-display text-xl font-semibold text-ink group-hover:text-sea">{categoryName(category.name, locale)}</h2>
         <p className="mt-1 text-xs font-semibold text-sea">{categoryDetails(category.name, locale).subtitle}</p><p className="mt-3 min-h-10 text-sm leading-5 text-muted">{categoryDetails(category.name, locale).description}</p>
         <span className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-bold text-ink-soft"><span>{count} {count === 1 ? dictionary(locale, publicIt, publicEn).publishedEventOne : dictionary(locale, publicIt, publicEn).publishedEventMany}</span><ArrowRight size={15} className="text-sea transition-transform group-hover:translate-x-1" /></span>
