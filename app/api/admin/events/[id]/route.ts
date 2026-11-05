@@ -1,3 +1,4 @@
+import { apiEventMessages, requestLocale } from "@/lib/api-locale";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/authz";
@@ -6,6 +7,7 @@ import { eventTypes, occurrenceSchema, onlineUrlSchema, validateSchedule } from 
 import { prepareSchedule } from "@/lib/event-schedule";
 import { deleteImage } from "@/lib/s3";
 import { eventCategories } from "@/lib/event-categories";
+import { getLocalizedText, setLocalizedText } from "@/lib/localized-text";
 
 const updateSchema = z.object({
   status: z.enum(["PENDING", "PUBLISHED", "REJECTED", "CANCELLED"]).optional(),
@@ -32,13 +34,14 @@ const updateSchema = z.object({
 }).strict();
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Non autorizzato." }, { status: 403 });
+  const messages = apiEventMessages(request);
+  if (!(await requireAdmin())) return NextResponse.json({ error: messages.unauthorized }, { status: 403 });
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success || !Object.keys(parsed.data).length) return NextResponse.json({ error: "Aggiornamento non valido." }, { status: 400 });
+  if (!parsed.success || !Object.keys(parsed.data).length) return NextResponse.json({ error: messages.invalidUpdate }, { status: 400 });
   const { id } = await params;
   const saved = await prisma.event.findUnique({ where: { id }, include: { dates: { orderBy: { startsAt: "asc" } } } });
-  if (!saved) return NextResponse.json({ error: "Evento non trovato." }, { status: 404 });
-  const { eventType, onlineUrl, dates, startsAt, endsAt, comuneId, location, province, venue, ...other } = parsed.data;
+  if (!saved) return NextResponse.json({ error: messages.eventNotFound }, { status: 404 });
+  const { eventType, onlineUrl, dates, startsAt, endsAt, comuneId, location, province, venue, descriptionEn, ...other } = parsed.data;
   const scheduleChanged = [eventType, onlineUrl, dates, startsAt, endsAt, comuneId, location, province, venue].some((value) => value !== undefined);
   let scheduleData = {};
   if (scheduleChanged) {
@@ -60,10 +63,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       venue: venue === undefined ? saved.venue : venue,
       dates: nextDates,
     };
-    const error = validateSchedule(scheduleInput);
+    const error = validateSchedule(scheduleInput, requestLocale(request));
     if (error) return NextResponse.json({ error }, { status: 400 });
     const schedule = await prepareSchedule(scheduleInput);
-    if (!schedule) return NextResponse.json({ error: "Seleziona comuni validi dall'elenco." }, { status: 400 });
+    if (!schedule) return NextResponse.json({ error: messages.invalidMunicipalities }, { status: 400 });
     const { dates: eventDates, ...fields } = schedule;
     scheduleData = {
       ...fields,
@@ -76,7 +79,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const event = await prisma.event.update({ where: { id }, data: {
     ...other,
     ...(other.titleEn !== undefined ? { titleEn: other.titleEn || null } : {}),
-    ...(other.descriptionEn !== undefined ? { descriptionEn: other.descriptionEn || null } : {}),
+    ...(descriptionEn !== undefined ? { descriptionTranslations: setLocalizedText(saved.descriptionTranslations, "en", descriptionEn) } : {}),
     ...(other.subcategory !== undefined ? { subcategory: other.subcategory || null } : {}),
     ...(other.subcategoryEn !== undefined ? { subcategoryEn: other.subcategoryEn || null } : {}),
     ...(other.price !== undefined ? { price: other.price || null } : {}),
@@ -84,20 +87,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     ...(other.website !== undefined ? { website: other.website || null } : {}),
     ...scheduleData,
   }, include: { dates: { orderBy: { startsAt: "asc" } } } });
-  return NextResponse.json({ event });
+  const { descriptionTranslations, ...eventFields } = event;
+  return NextResponse.json({ event: { ...eventFields, descriptionEn: getLocalizedText(descriptionTranslations, "en", "") || null } });
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Non autorizzato." }, { status: 403 });
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const messages = apiEventMessages(request);
+  if (!(await requireAdmin())) return NextResponse.json({ error: messages.unauthorized }, { status: 403 });
   const { id } = await params;
   const event = await prisma.event.findUnique({ where: { id }, select: { id: true, images: { select: { objectKey: true } } } });
-  if (!event) return NextResponse.json({ error: "Evento non trovato." }, { status: 404 });
+  if (!event) return NextResponse.json({ error: messages.eventNotFound }, { status: 404 });
   await prisma.event.delete({ where: { id } });
   const deletions = await Promise.allSettled(event.images.map((image) => deleteImage(image.objectKey)));
   const remaining = event.images.filter((_, index) => deletions[index].status === "rejected");
   if (remaining.length) {
     console.error("Oggetti S3 da rimuovere dopo eliminazione evento", { eventId: id, keys: remaining.map((image) => image.objectKey) });
-    return NextResponse.json({ ok: true, warning: "Evento eliminato, ma alcune immagini non sono state rimosse dallo storage. Controlla i log del server." });
+    return NextResponse.json({ ok: true, warning: messages.imagesNotRemoved });
   }
   return NextResponse.json({ ok: true });
 }

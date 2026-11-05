@@ -1,3 +1,6 @@
+import { dictionary } from "@/lib/dictionary";
+import it from "@/messages/it/api.json";
+import en from "@/messages/en/api.json";
 import { createHash, randomBytes } from "node:crypto";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
@@ -7,12 +10,14 @@ import { sendPasswordResetEmail, smtpConfigured } from "@/lib/email";
 
 const requestSchema = z.object({ email: z.string().trim().email().max(160), locale: z.enum(["it", "en"]).default("it") });
 const resetSchema = z.object({ token: z.string().min(32).max(128), password: z.string().min(8).max(100) });
-const generic = { message: "If the account exists, a reset link will be sent." };
 
 export async function POST(request: Request) {
-  const parsed = requestSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid email." }, { status: 400 });
-  if (!smtpConfigured()) return NextResponse.json({ error: "Email service unavailable." }, { status: 503 });
+  const body: unknown = await request.json().catch(() => null);
+  const locale = typeof body === "object" && body !== null && "locale" in body && body.locale === "en" ? "en" : "it";
+  const t = dictionary(locale, it, en).reset;
+  const parsed = requestSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: t.invalidEmail }, { status: 400 });
+  if (!smtpConfigured()) return NextResponse.json({ error: t.unavailable }, { status: 503 });
   const email = parsed.data.email.toLowerCase();
   const user = await prisma.user.findUnique({ where: { email }, select: { isActive: true, password: true } });
   if (user?.isActive && user.password) {
@@ -33,12 +38,15 @@ export async function POST(request: Request) {
       }
     }
   }
-  return NextResponse.json(generic);
+  return NextResponse.json({ message: t.generic });
 }
 
 export async function PUT(request: Request) {
-  const parsed = resetSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid reset request." }, { status: 400 });
+  const body: unknown = await request.json().catch(() => null);
+  const locale = typeof body === "object" && body !== null && "locale" in body && body.locale === "en" ? "en" : "it";
+  const t = dictionary(locale, it, en).reset;
+  const parsed = resetSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: t.invalidRequest }, { status: 400 });
   const tokenHash = createHash("sha256").update(parsed.data.token).digest("hex");
   const password = await hash(parsed.data.password, 12);
   const success = await prisma.$transaction(async (tx) => {
@@ -50,5 +58,5 @@ export async function PUT(request: Request) {
     await tx.passwordResetToken.deleteMany({ where: { email: record.email } });
     return updated.count === 1;
   });
-  return success ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "Invalid or expired link." }, { status: 400 });
+  return success ? NextResponse.json({ ok: true }) : NextResponse.json({ error: t.invalidLink }, { status: 400 });
 }

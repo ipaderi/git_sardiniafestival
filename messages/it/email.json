@@ -1,0 +1,39 @@
+{
+  "footer": "SardiniaFestival · Tutta l'isola, un calendario.",
+  "verification": {
+    "subject": "Conferma il tuo account SardiniaFestival",
+    "eyebrow": "Verifica email",
+    "heading": "Confermiamo che sei tu?",
+    "greeting": "Ciao {name}, conferma il tuo indirizzo email per attivare l'account e inviare segnalazioni su SardiniaFestival.",
+    "expiry": "Il link resta valido per 24 ore. Se non hai creato tu l'account, puoi ignorare questa email.",
+    "action": "Verifica il mio account"
+  },
+  "passwordReset": {
+    "subject": "Reimposta la password di SardiniaFestival",
+    "eyebrow": "Recupero password",
+    "heading": "Scegli una nuova password",
+    "intro": "Abbiamo ricevuto una richiesta per reimpostare la password. Il link è valido per un'ora.",
+    "ignore": "Se non hai effettuato questa richiesta, puoi ignorare questa email.",
+    "action": "Reimposta la password"
+  },
+  "eventReceived": {
+    "subject": "Abbiamo ricevuto “{eventTitle}”",
+    "eyebrow": "Segnalazione ricevuta",
+    "heading": "Grazie per aver condiviso la festa.",
+    "greeting": "Ciao {name}, abbiamo ricevuto la segnalazione di “{eventTitle}”.",
+    "review": "La revisione editoriale è in corso. Ti scriveremo quando lo stato dell'evento cambierà."
+  },
+  "eventPublished": {
+    "subject": "“{eventTitle}” è online",
+    "eyebrow": "Evento pubblicato",
+    "heading": "La tua festa è online.",
+    "greeting": "Ciao {name}, “{eventTitle}” è stato verificato e ora compare nel calendario SardiniaFestival.",
+    "action": "Apri la pagina evento"
+  },
+  "eventRejected": {
+    "subject": "Aggiornamento sulla segnalazione “{eventTitle}”",
+    "eyebrow": "Aggiornamento evento",
+    "heading": "La segnalazione è stata aggiornata.",
+    "greeting": "Ciao {name}, la segnalazione di “{eventTitle}” non è stata approvata per la pubblicazione. Puoi contattarci se vuoi aggiungere informazioni o correggere i dettagli."
+  }
+}

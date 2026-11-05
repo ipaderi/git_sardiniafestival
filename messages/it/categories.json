@@ -1,0 +1,10 @@
+{
+  "Musica": { "label": "Musica", "subtitle": "Concerti e festival", "description": "Live, festival e suoni della Sardegna." },
+  "Tradizione": { "label": "Tradizione", "subtitle": "Sagre e feste", "description": "Sagre, riti, feste di paese e tradizioni." },
+  "Teatro": { "label": "Teatro", "subtitle": "Palchi e spettacoli", "description": "Teatro, danza, prosa e spettacoli dal vivo." },
+  "Arte & cultura": { "label": "Arte & cultura", "subtitle": "Mostre e incontri", "description": "Mostre, cinema, incontri e cultura." },
+  "Sport": { "label": "Sport", "subtitle": "Competizioni e outdoor", "description": "Gare, attività e appuntamenti all'aria aperta." },
+  "Food & wine": { "label": "Food & wine", "subtitle": "Degustazioni e sagre", "description": "Sapori, cantine e cucina dell'isola." },
+  "Natura": { "label": "Natura", "subtitle": "Escursioni e outdoor", "description": "Esperienze nei paesaggi sardi." },
+  "Altro": { "label": "Altro", "subtitle": "Incontri e appuntamenti", "description": "Altri appuntamenti da vivere in Sardegna." }
+}

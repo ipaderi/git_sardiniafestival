@@ -1,0 +1,22 @@
+{
+  "register": {
+    "invalid": "Check your name, email and password (at least 8 characters).",
+    "unavailable": "Email verification is not configured yet. Please try later.",
+    "exists": "An account already exists with this email address.",
+    "created": "Account created. We sent you a verification link valid for 24 hours.",
+    "createdResend": "Account created. The email could not be sent; request a new link from the sign-in page."
+  },
+  "resend": {
+    "invalid": "Enter a valid email address.",
+    "unavailable": "The email service is currently unavailable.",
+    "failed": "The email could not be sent. Please try again later.",
+    "sent": "If the account exists and still needs verification, you will receive a new link."
+  },
+  "reset": {
+    "invalidEmail": "Enter a valid email address.",
+    "unavailable": "The email service is currently unavailable.",
+    "generic": "If the account exists, a reset link will be sent.",
+    "invalidRequest": "Invalid reset request.",
+    "invalidLink": "Invalid or expired link."
+  }
+}

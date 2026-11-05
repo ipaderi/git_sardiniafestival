@@ -1,4 +1,7 @@
 import nodemailer, { type SendMailOptions } from "nodemailer";
+import { dictionary, interpolate } from "@/lib/dictionary";
+import it from "@/messages/it/email.json";
+import en from "@/messages/en/email.json";
 
 type EmailContent = {
   locale?: "it" | "en";
@@ -24,7 +27,7 @@ function renderEmail(content: EmailContent) {
   const action = content.action
     ? `<p style="margin:28px 0"><a href="${escapeHtml(content.action.href)}" style="display:inline-block;border-radius:10px;background:#20b6a7;padding:14px 22px;color:#082848;font:bold 14px Arial,sans-serif;text-decoration:none">${escapeHtml(content.action.label)}</a></p>`
     : "";
-  const footer = content.locale === "en" ? "SardiniaFestival · The whole island, one calendar." : "SardiniaFestival · Tutta l'isola, un calendario.";
+  const footer = dictionary(content.locale, it, en).footer;
   const text = [content.heading, ...content.paragraphs, content.action ? `${content.action.label}: ${content.action.href}` : "", footer].filter(Boolean).join("\n\n");
   const html = `<!doctype html><html lang="${content.locale === "en" ? "en" : "it"}"><body style="margin:0;background:#f6f7f4;padding:32px 12px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;border:1px solid #e2e8ed;border-radius:20px;background:#fff"><tr><td style="padding:32px 32px 16px"><div style="color:#087567;font:bold 10px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase">SardiniaFestival</div><div style="margin-top:28px;color:#ef7355;font:bold 10px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase">${escapeHtml(content.eyebrow)}</div><h1 style="margin:10px 0 22px;color:#082848;font:600 28px/1.2 Arial,sans-serif">${escapeHtml(content.heading)}</h1>${paragraphs}${action}<hr style="margin:30px 0 20px;border:0;border-top:1px solid #edf0f2"><p style="margin:0;color:#718394;font:11px/1.6 Arial,sans-serif">${escapeHtml(footer)}</p></td></tr></table></td></tr></table></body></html>`;
   return { text, html };
@@ -62,56 +65,37 @@ async function send(to: string, content: EmailContent) {
 }
 
 export async function sendVerificationEmail(to: string, name: string, verificationUrl: string, locale: "it" | "en" = "it") {
-  await send(to, locale === "en" ? {
-    locale: "en",
-    subject: "Verify your SardiniaFestival account",
-    eyebrow: "Email verification",
-    heading: "Confirm your email",
-    paragraphs: [`Hello ${name}, confirm your email address to activate your SardiniaFestival account.`, "This link is valid for 24 hours. If you did not create an account, you can ignore this email."],
-    action: { label: "Verify my account", href: verificationUrl },
-  } : {
-    subject: "Conferma il tuo account SardiniaFestival",
-    eyebrow: "Verifica email",
-    heading: "Confermiamo che sei tu?",
-    paragraphs: [`Ciao ${name}, conferma il tuo indirizzo email per attivare l'account e inviare segnalazioni su SardiniaFestival.`, "Il link resta valido per 24 ore. Se non hai creato tu l'account, puoi ignorare questa email."],
-    action: { label: "Verifica il mio account", href: verificationUrl },
+  const t = dictionary(locale, it, en).verification;
+  await send(to, {
+    locale, subject: t.subject, eyebrow: t.eyebrow, heading: t.heading,
+    paragraphs: [interpolate(t.greeting, { name }), t.expiry],
+    action: { label: t.action, href: verificationUrl },
   });
 }
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string, locale: "it" | "en") {
-  await send(to, locale === "en" ? {
-    locale: "en",
-    subject: "Reset your SardiniaFestival password",
-    eyebrow: "Password reset",
-    heading: "Choose a new password",
-    paragraphs: ["We received a request to reset your password. This link is valid for one hour.", "If you did not request it, you can ignore this email."],
-    action: { label: "Reset password", href: resetUrl },
-  } : {
-    subject: "Reimposta la password di SardiniaFestival",
-    eyebrow: "Recupero password",
-    heading: "Scegli una nuova password",
-    paragraphs: ["Abbiamo ricevuto una richiesta per reimpostare la password. Il link è valido per un'ora.", "Se non hai effettuato questa richiesta, puoi ignorare questa email."],
-    action: { label: "Reimposta la password", href: resetUrl },
+  const t = dictionary(locale, it, en).passwordReset;
+  await send(to, {
+    locale, subject: t.subject, eyebrow: t.eyebrow, heading: t.heading,
+    paragraphs: [t.intro, t.ignore],
+    action: { label: t.action, href: resetUrl },
   });
 }
 
-export async function sendEventReceivedEmail(to: string, name: string, eventTitle: string) {
+export async function sendEventReceivedEmail(to: string, name: string, eventTitle: string, locale: "it" | "en" = "it") {
+  const t = dictionary(locale, it, en).eventReceived;
   await send(to, {
-    subject: `Abbiamo ricevuto “${eventTitle}”`,
-    eyebrow: "Segnalazione ricevuta",
-    heading: "Grazie per aver condiviso la festa.",
-    paragraphs: [`Ciao ${name}, abbiamo ricevuto la segnalazione di “${eventTitle}”.`, "La revisione editoriale è in corso. Ti scriveremo quando lo stato dell'evento cambierà."],
+    locale, subject: interpolate(t.subject, { eventTitle }), eyebrow: t.eyebrow, heading: t.heading,
+    paragraphs: [interpolate(t.greeting, { name, eventTitle }), t.review],
   });
 }
 
-export async function sendEventStatusEmail(to: string, name: string, eventTitle: string, published: boolean, eventUrl: string) {
+export async function sendEventStatusEmail(to: string, name: string, eventTitle: string, published: boolean, eventUrl: string, locale: "it" | "en" = "it") {
+  const messages = dictionary(locale, it, en);
+  const t = published ? messages.eventPublished : messages.eventRejected;
   await send(to, {
-    subject: published ? `“${eventTitle}” è online` : `Aggiornamento sulla segnalazione “${eventTitle}”`,
-    eyebrow: published ? "Evento pubblicato" : "Aggiornamento evento",
-    heading: published ? "La tua festa è online." : "La segnalazione è stata aggiornata.",
-    paragraphs: published
-      ? [`Ciao ${name}, “${eventTitle}” è stato verificato e ora compare nel calendario SardiniaFestival.`]
-      : [`Ciao ${name}, la segnalazione di “${eventTitle}” non è stata approvata per la pubblicazione. Puoi contattarci se vuoi aggiungere informazioni o correggere i dettagli.`],
-    action: published ? { label: "Apri la pagina evento", href: eventUrl } : undefined,
+    locale, subject: interpolate(t.subject, { eventTitle }), eyebrow: t.eyebrow, heading: t.heading,
+    paragraphs: [interpolate(t.greeting, { name, eventTitle })],
+    action: published ? { label: messages.eventPublished.action, href: eventUrl } : undefined,
   });
 }

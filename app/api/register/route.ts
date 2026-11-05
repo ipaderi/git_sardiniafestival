@@ -1,3 +1,6 @@
+import { dictionary } from "@/lib/dictionary";
+import it from "@/messages/it/api.json";
+import en from "@/messages/en/api.json";
 import { createHash, randomBytes } from "node:crypto";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
@@ -13,14 +16,17 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = registerSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Controlla nome, email e password (almeno 8 caratteri)." }, { status: 400 });
+  const body: unknown = await request.json().catch(() => null);
+  const locale = typeof body === "object" && body !== null && "locale" in body && body.locale === "en" ? "en" : "it";
+  const t = dictionary(locale, it, en).register;
+  const parsed = registerSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: t.invalid }, { status: 400 });
 
   const { name, email, password } = parsed.data;
   const normalizedEmail = email.toLowerCase();
-  if (!smtpConfigured()) return NextResponse.json({ error: "La verifica email non è ancora configurata. Riprova più tardi." }, { status: 503 });
+  if (!smtpConfigured()) return NextResponse.json({ error: t.unavailable }, { status: 503 });
   const exists = await prisma.user.findUnique({ where: { email: normalizedEmail }, select: { id: true } });
-  if (exists) return NextResponse.json({ error: "Esiste già un account con questa email." }, { status: 409 });
+  if (exists) return NextResponse.json({ error: t.exists }, { status: 409 });
 
   const token = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(token).digest("hex");
@@ -36,8 +42,8 @@ export async function POST(request: Request) {
   verificationUrl.searchParams.set("locale", parsed.data.locale);
   try {
     await sendVerificationEmail(normalizedEmail, name, verificationUrl.toString(), parsed.data.locale);
-    return NextResponse.json({ message: "Account creato. Ti abbiamo inviato un link valido 24 ore per verificare l'indirizzo email." }, { status: 201 });
+    return NextResponse.json({ message: t.created }, { status: 201 });
   } catch {
-    return NextResponse.json({ message: "Account creato. L'invio dell'email non è riuscito: puoi richiedere un nuovo link dalla pagina di accesso.", resend: true }, { status: 201 });
+    return NextResponse.json({ message: t.createdResend, resend: true }, { status: 201 });
   }
 }

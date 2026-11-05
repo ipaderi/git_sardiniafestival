@@ -1,5 +1,9 @@
 "use client";
 
+import { dictionary } from "@/lib/dictionary";
+import it from "@/messages/it/account.json";
+import enMessages from "@/messages/en/account.json";
+
 import { useId } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -22,12 +26,7 @@ export type ScheduleDate = {
   originalEndsAt?: string;
 };
 
-export const eventTypeLabels: Record<EventType, string> = {
-  SINGLE_DAY: "Giorno singolo",
-  MULTI_DAY: "Più giorni",
-  MULTI_LOCATION: "Più giorni e più luoghi",
-  ONLINE: "Online (remoto)",
-};
+export const eventTypeLabels: Record<EventType, string> = it.schedule.eventTypes;
 
 export function emptyScheduleDate(): ScheduleDate {
   return { startsAt: "", endsAt: "", label: "", labelEn: "", venue: "", address: "", city: "", province: "", comuneId: "" };
@@ -92,17 +91,17 @@ export function serializeSchedule(type: EventType, dates: ScheduleDate[]) {
 }
 
 export function validateSchedule(type: EventType, dates: ScheduleDate[], locale = "it") {
-  const en = locale === "en";
+  const t = dictionary(locale, it, enMessages).schedule;
   const visibleDates = type === "SINGLE_DAY" ? dates.slice(0, 1) : dates;
-  if (!visibleDates.length || visibleDates.length > 100) return en ? "Enter between 1 and 100 occurrences." : "Inserisci da 1 a 100 appuntamenti.";
+  if (!visibleDates.length || visibleDates.length > 100) return t.enterBetween1And100Occurrences;
   for (const date of visibleDates) {
     const start = romeTimeToInstant(date.startsAt, date.originalStartsAt);
     const end = date.endsAt ? romeTimeToInstant(date.endsAt, date.originalEndsAt) : null;
-    if (!start || (date.endsAt && !end)) return en ? "Check the times: this time does not exist in Italy, for example during the daylight saving change." : "Controlla gli orari: quello indicato non esiste nell'ora italiana, ad esempio durante il passaggio all'ora legale.";
-    if (end && end < start) return en ? "An occurrence must end on or after its start." : "La fine di un appuntamento deve essere successiva o uguale all'inizio.";
+    if (!start || (date.endsAt && !end)) return t.checkTheTimesThisTimeDoesNot;
+    if (end && end < start) return t.anOccurrenceMustEndOnOrAfter;
   }
-  if (type === "MULTI_DAY" && visibleDates.length === 1 && (!visibleDates[0].endsAt || visibleDates[0].startsAt.slice(0, 10) === visibleDates[0].endsAt.slice(0, 10))) return en ? "For a multi-day event, add an occurrence or set the end to a later day." : "Per un evento su più giorni aggiungi un appuntamento oppure indica una fine in un giorno successivo.";
-  if (type === "MULTI_LOCATION" && (visibleDates.length < 2 || visibleDates.some((date) => !date.comuneId || !date.venue.trim()))) return en ? "Choose a municipality and venue for each occurrence." : "Seleziona un comune e indica la sede per ogni appuntamento.";
+  if (type === "MULTI_DAY" && visibleDates.length === 1 && (!visibleDates[0].endsAt || visibleDates[0].startsAt.slice(0, 10) === visibleDates[0].endsAt.slice(0, 10))) return t.forAMultiDayEventAddAn;
+  if (type === "MULTI_LOCATION" && (visibleDates.length < 2 || visibleDates.some((date) => !date.comuneId || !date.venue.trim()))) return t.chooseAMunicipalityAndVenueForEach;
   return "";
 }
 
@@ -114,7 +113,7 @@ export function EventScheduleFields({ type, onTypeChange, dates, onDatesChange, 
   compact?: boolean;
   locale?: string;
 }) {
-  const en = locale === "en";
+  const t = dictionary(locale, it, enMessages).schedule;
   const id = useId();
   const label = compact ? "grid gap-1.5 text-[11px] font-bold text-ink" : "grid gap-2 text-xs font-bold text-ink";
   const input = compact ? "focus-ring h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal text-ink" : undefined;
@@ -128,31 +127,31 @@ export function EventScheduleFields({ type, onTypeChange, dates, onDatesChange, 
     if (value === "MULTI_LOCATION" && dates.length < 2) onDatesChange([...dates, emptyScheduleDate()]);
   }
   return <div className="space-y-4 sm:col-span-2">
-    <label className={label} htmlFor={`${id}-type`}>{en ? "Event type" : "Tipologia evento"} *
+    <label className={label} htmlFor={`${id}-type`}>{t.eventType} *
       <select id={`${id}-type`} className={select} value={type} onChange={(event) => changeType(event.target.value as EventType)}>
-        {(Object.keys(eventTypeLabels) as EventType[]).map((value) => <option key={value} value={value}>{en ? ({ SINGLE_DAY: "Single day", MULTI_DAY: "Multiple days", MULTI_LOCATION: "Multiple days and venues", ONLINE: "Online" } as Record<EventType, string>)[value] : eventTypeLabels[value]}</option>)}
+        {(Object.keys(eventTypeLabels) as EventType[]).map((value) => <option key={value} value={value}>{t.eventTypes[value]}</option>)}
       </select>
     </label>
-    <p className="text-xs leading-5 text-muted">{en ? "Times use the Italian time zone (Rome). When clocks go back, the first occurrence is used for a new time." : "Gli orari sono espressi nell'ora italiana (Roma). Quando un orario si ripete al cambio dell'ora, per un nuovo appuntamento viene usata la prima occorrenza."}</p>
+    <p className="text-xs leading-5 text-muted">{t.timesUseTheItalianTimeZoneRome}</p>
     <div className="space-y-3">
       {visibleDates.map((date, index) => <fieldset key={index} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
-        <legend className="px-1 text-xs font-bold text-ink">{type === "SINGLE_DAY" ? (en ? "Date and time" : "Data e orario") : `${en ? "Occurrence" : "Appuntamento"} ${index + 1}`}</legend>
-        <label className={label}>{en ? "Start" : "Inizio"} *<Input className={input} required type="datetime-local" value={date.startsAt} onChange={(event) => update(index, { startsAt: event.target.value })} /></label>
-        <label className={label}>{en ? "End (optional)" : "Fine (facoltativa)"}<Input className={input} type="datetime-local" value={date.endsAt} onChange={(event) => update(index, { endsAt: event.target.value })} /></label>
+        <legend className="px-1 text-xs font-bold text-ink">{type === "SINGLE_DAY" ? (t.dateAndTime) : `${t.occurrence} ${index + 1}`}</legend>
+        <label className={label}>{t.start} *<Input className={input} required type="datetime-local" value={date.startsAt} onChange={(event) => update(index, { startsAt: event.target.value })} /></label>
+        <label className={label}>{t.endOptional}<Input className={input} type="datetime-local" value={date.endsAt} onChange={(event) => update(index, { endsAt: event.target.value })} /></label>
         {type !== "SINGLE_DAY" && <>
-          <label className={label}>{en ? "Occurrence name (Italian, optional)" : "Nome appuntamento (italiano, facoltativo)"}<Input className={input} maxLength={120} value={date.label} onChange={(event) => update(index, { label: event.target.value })} placeholder="Es. Prima serata" /></label>
-          <label className={label}>{en ? "Occurrence name (English, optional)" : "Nome appuntamento (inglese, facoltativo)"}<Input className={input} maxLength={120} value={date.labelEn || ""} onChange={(event) => update(index, { labelEn: event.target.value })} placeholder="E.g. Opening night" /></label>
+          <label className={label}>{t.occurrenceNameItalianOptional}<Input className={input} maxLength={120} value={date.label} onChange={(event) => update(index, { label: event.target.value })} placeholder={t.italianExample} /></label>
+          <label className={label}>{t.occurrenceNameEnglishOptional}<Input className={input} maxLength={120} value={date.labelEn || ""} onChange={(event) => update(index, { labelEn: event.target.value })} placeholder={t.englishExample} /></label>
         </>}
         {type === "MULTI_LOCATION" && <>
-          <label className={label}>{en ? "Municipality and province" : "Comune e provincia"} *<ComuneSelect locale={locale} required className={select} value={date.comuneId} onChange={(comune) => update(index, { comuneId: comune?.id || "", city: comune?.name || "", province: comune?.provinceCode || "", latitude: null, longitude: null })} /></label>
-          <label className={label}>{en ? "Venue" : "Luogo"} *<Input className={input} required minLength={2} maxLength={120} value={date.venue} onChange={(event) => update(index, { venue: event.target.value, latitude: null, longitude: null })} placeholder={en ? "Square, theatre, venue…" : "Piazza, teatro, spazio…"} /></label>
-          <label className={label}>{en ? "Address (optional)" : "Indirizzo (facoltativo)"}<Input className={input} maxLength={200} value={date.address} onChange={(event) => update(index, { address: event.target.value, latitude: null, longitude: null })} /></label>
+          <label className={label}>{t.municipalityAndProvince} *<ComuneSelect locale={locale} required className={select} value={date.comuneId} onChange={(comune) => update(index, { comuneId: comune?.id || "", city: comune?.name || "", province: comune?.provinceCode || "", latitude: null, longitude: null })} /></label>
+          <label className={label}>{t.venue} *<Input className={input} required minLength={2} maxLength={120} value={date.venue} onChange={(event) => update(index, { venue: event.target.value, latitude: null, longitude: null })} placeholder={t.squareTheatreVenue} /></label>
+          <label className={label}>{t.addressOptional}<Input className={input} maxLength={200} value={date.address} onChange={(event) => update(index, { address: event.target.value, latitude: null, longitude: null })} /></label>
         </>}
-        {type !== "SINGLE_DAY" && dates.length > (type === "MULTI_LOCATION" ? 2 : 1) && <div className="sm:col-span-2"><button type="button" className="focus-ring inline-flex items-center gap-1 rounded px-1 py-1 text-xs font-bold text-rose-700" onClick={() => onDatesChange(dates.filter((_, i) => i !== index))}><Trash2 size={14} /> {en ? "Remove occurrence" : "Rimuovi appuntamento"}</button></div>}
+        {type !== "SINGLE_DAY" && dates.length > (type === "MULTI_LOCATION" ? 2 : 1) && <div className="sm:col-span-2"><button type="button" className="focus-ring inline-flex items-center gap-1 rounded px-1 py-1 text-xs font-bold text-rose-700" onClick={() => onDatesChange(dates.filter((_, i) => i !== index))}><Trash2 size={14} /> {t.removeOccurrence}</button></div>}
       </fieldset>)}
     </div>
-    {type !== "SINGLE_DAY" && dates.length < 100 && <button type="button" className="focus-ring inline-flex items-center gap-1 rounded px-1 py-1 text-xs font-bold text-sea" onClick={() => onDatesChange([...dates, emptyScheduleDate()])}><Plus size={15} /> {en ? "Add occurrence" : "Aggiungi appuntamento"}</button>}
-    {type === "MULTI_DAY" && <p className="text-xs leading-5 text-muted">{en ? "For a continuous event enter a start and end; for separate occurrences add dates." : "Per un evento continuativo indica inizio e fine; per appuntamenti separati aggiungi le date."}</p>}
-    {type === "MULTI_LOCATION" && <p className="text-xs leading-5 text-muted">{en ? "Add at least two occurrences, each with its own venue." : "Indica almeno due appuntamenti, ciascuno con il proprio luogo."}</p>}
+    {type !== "SINGLE_DAY" && dates.length < 100 && <button type="button" className="focus-ring inline-flex items-center gap-1 rounded px-1 py-1 text-xs font-bold text-sea" onClick={() => onDatesChange([...dates, emptyScheduleDate()])}><Plus size={15} /> {t.addOccurrence}</button>}
+    {type === "MULTI_DAY" && <p className="text-xs leading-5 text-muted">{t.forAContinuousEventEnterAStart}</p>}
+    {type === "MULTI_LOCATION" && <p className="text-xs leading-5 text-muted">{t.addAtLeastTwoOccurrencesEachWith}</p>}
   </div>;
 }

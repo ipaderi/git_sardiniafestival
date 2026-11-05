@@ -37,6 +37,10 @@ Gli eventi sono associati ai comuni tramite chiave canonica. Le pagine della cit
 - `/it/auth/login`, `/it/auth/register`, `/it/auth/password-reset`, `/it/dashboard` e `/it/dashboard/crea-evento` gestiscono account ed eventi. Per l'inglese si sostituisce `/it` con `/en`.
 - Le pagine di categoria e delle città entrano nella sitemap quando contengono eventi pubblicati. Gli indirizzi nella sitemap usano `NEXT_PUBLIC_SITE_URL`, da impostare al dominio pubblico canonico nell'ambiente di deploy.
 
+## Traduzioni dell'interfaccia
+
+Le stringhe dell'interfaccia e delle email sono nei dizionari JSON sotto `messages/it/` e `messages/en/`, suddivisi per navigazione, pagine pubbliche, categorie, account, amministrazione ed email/API. Le due lingue devono mantenere le stesse chiavi; i valori tra parentesi graffe, come `{name}`, sono parametri da conservare nelle traduzioni. `lib/dictionary.ts` seleziona il dizionario e gestisce le interpolazioni. I contenuti degli eventi inseriti dagli organizzatori rimangono nel database, separati dai testi dell'interfaccia.
+
 In produzione il calendario mostra solo eventi salvati e approvati nel database.
 
 ## Deploy con Docker Compose

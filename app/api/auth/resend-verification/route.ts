@@ -1,3 +1,6 @@
+import { dictionary } from "@/lib/dictionary";
+import it from "@/messages/it/api.json";
+import en from "@/messages/en/api.json";
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -7,9 +10,12 @@ import { sendVerificationEmail, smtpConfigured } from "@/lib/email";
 const schema = z.object({ email: z.string().trim().email().max(160), locale: z.enum(["it", "en"]).default("it") });
 
 export async function POST(request: Request) {
-  const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Inserisci un indirizzo email valido." }, { status: 400 });
-  if (!smtpConfigured()) return NextResponse.json({ error: "Il servizio email non è disponibile al momento." }, { status: 503 });
+  const body: unknown = await request.json().catch(() => null);
+  const locale = typeof body === "object" && body !== null && "locale" in body && body.locale === "en" ? "en" : "it";
+  const t = dictionary(locale, it, en).resend;
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: t.invalid }, { status: 400 });
+  if (!smtpConfigured()) return NextResponse.json({ error: t.unavailable }, { status: 503 });
 
   const email = parsed.data.email.toLowerCase();
   const user = await prisma.user.findUnique({ where: { email }, select: { name: true, emailVerified: true } });
@@ -25,9 +31,9 @@ export async function POST(request: Request) {
     try {
       await sendVerificationEmail(email, user.name || "", verificationUrl.toString(), parsed.data.locale);
     } catch {
-      return NextResponse.json({ error: "Non è stato possibile inviare l'email. Riprova più tardi." }, { status: 503 });
+      return NextResponse.json({ error: t.failed }, { status: 503 });
     }
   }
 
-  return NextResponse.json({ message: "Se l'account esiste e deve ancora essere verificato, riceverai un nuovo link." });
+  return NextResponse.json({ message: t.sent });
 }

@@ -1,5 +1,9 @@
 "use client";
 
+import { dictionary, interpolate } from "@/lib/dictionary";
+import publicIt from "@/messages/it/public.json";
+import publicEn from "@/messages/en/public.json";
+
 import Link from "next/link";
 import { useRef, useState, type PointerEvent } from "react";
 import { PROVINCES } from "@/lib/provinces";
@@ -10,7 +14,6 @@ import styles from "./hero-province-map.module.css";
 export function HeroProvinceMap({ locale = "it" }: { locale?: string }) {
   const [active, setActive] = useState<string | null>(null);
   const tooltip = useRef<HTMLDivElement>(null);
-  const english = locale === "en";
   const moveTooltip = (event: PointerEvent<Element>) => {
     if (event.pointerType === "touch" || !tooltip.current) return;
     tooltip.current.style.left = `${Math.min(event.clientX + 16, window.innerWidth - 220)}px`;
@@ -19,14 +22,14 @@ export function HeroProvinceMap({ locale = "it" }: { locale?: string }) {
   return (
     <div className="relative mx-auto flex h-[350px] w-full max-w-[460px] items-center justify-center md:h-[430px]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-3 rounded-full bg-[#16a6a0]/10 blur-3xl" />
-      <svg viewBox="-100 -80 2486.118 4562.728" role="group" aria-label={english ? "Explore Sardinia by province" : "Esplora la Sardegna per provincia"} className="relative h-[92%] max-w-full overflow-visible drop-shadow-[0_16px_22px_rgba(0,20,37,.2)]">
-        <title>{english ? "Sardinia: choose a province" : "Sardegna: scegli una provincia"}</title>
+      <svg viewBox="-100 -80 2486.118 4562.728" role="group" aria-label={dictionary(locale, publicIt, publicEn).provinceMapAriaLabel} className="relative h-[92%] max-w-full overflow-visible drop-shadow-[0_16px_22px_rgba(0,20,37,.2)]">
+        <title>{dictionary(locale, publicIt, publicEn).sardiniaChooseAProvince}</title>
         {PROVINCES.map((province) => (
           <Link
             key={province.code}
             href={`/${locale}/events/province/${province.slug}`}
             prefetch={false}
-            aria-label={english ? `Events in ${province.name}` : `Eventi in provincia di ${province.name}`}
+            aria-label={interpolate(dictionary(locale, publicIt, publicEn).provinceEventsTitle, { name: province.name })}
             className={styles.province}
             onPointerEnter={(event) => { if (event.pointerType !== "touch") { setActive(province.code); moveTooltip(event); } }}
             onPointerMove={moveTooltip}
@@ -42,7 +45,7 @@ export function HeroProvinceMap({ locale = "it" }: { locale?: string }) {
         {PROVINCES.find((province) => province.code === active)?.name}
       </div>
       <div className="pointer-events-none absolute bottom-1 right-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-xs text-blue-50 shadow-xl backdrop-blur-md">
-        <span className="flex items-center gap-2"><span className="size-2 rounded-full bg-teal-300" /> {english ? "Choose a province" : "Scegli una provincia"}</span>
+        <span className="flex items-center gap-2"><span className="size-2 rounded-full bg-teal-300" /> {dictionary(locale, publicIt, publicEn).chooseAProvince}</span>
       </div>
     </div>
   );

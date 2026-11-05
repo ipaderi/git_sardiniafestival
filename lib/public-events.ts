@@ -1,5 +1,9 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { dictionary } from "@/lib/dictionary";
+import publicIt from "@/messages/it/public.json";
+import publicEn from "@/messages/en/public.json";
+import { getLocalizedDescription } from "@/lib/localized-text";
 
 export type FestivalEvent = {
   id: string;
@@ -40,7 +44,7 @@ function eventDateLabel(dates: FestivalEvent["dates"], locale = "it") {
   const start = new Date(first.startsAt);
   const end = first.endsAt ? new Date(first.endsAt) : null;
   const format = (value: Date) => value.toLocaleDateString(locale === "en" ? "en-GB" : "it-IT", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Rome" });
-  if (dates.length > 1) return `${locale === "en" ? "Multiple dates · from" : "Più date · da"} ${format(start)}`;
+  if (dates.length > 1) return `${dictionary(locale, publicIt, publicEn).multipleDatesFrom} ${format(start)}`;
   if (end && format(end) !== format(start)) return `${format(start)} – ${format(end)}`;
   return format(start);
 }
@@ -143,10 +147,10 @@ export async function getPublicEvents(filters: PublicEventFilters = {}): Promise
         venue: event.venue ?? "",
         date: cardDates[0].startsAt.slice(0, 10),
         dateLabel: eventDateLabel(cardDates, filters.locale),
-        price: (filters.locale === "en" ? event.priceEn || event.price : event.price) || (filters.locale === "en" ? "See details" : "Dettagli sul sito"),
+        price: (filters.locale === "en" ? event.priceEn || event.price : event.price) || dictionary(filters.locale, publicIt, publicEn).priceDetails,
         image: event.image || "",
         featured: event.featured,
-        description: filters.locale === "en" ? event.descriptionEn || event.description : event.description,
+        description: getLocalizedDescription(event.description, event.descriptionTranslations, filters.locale || "it"),
         subcategory: event.subcategory,
         subcategoryEn: event.subcategoryEn,
         latitude: event.latitude,

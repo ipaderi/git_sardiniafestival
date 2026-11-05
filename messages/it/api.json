@@ -1,0 +1,22 @@
+{
+  "register": {
+    "invalid": "Controlla nome, email e password (almeno 8 caratteri).",
+    "unavailable": "La verifica email non è ancora configurata. Riprova più tardi.",
+    "exists": "Esiste già un account con questa email.",
+    "created": "Account creato. Ti abbiamo inviato un link valido 24 ore per verificare l'indirizzo email.",
+    "createdResend": "Account creato. L'invio dell'email non è riuscito: puoi richiedere un nuovo link dalla pagina di accesso."
+  },
+  "resend": {
+    "invalid": "Inserisci un indirizzo email valido.",
+    "unavailable": "Il servizio email non è disponibile al momento.",
+    "failed": "Non è stato possibile inviare l'email. Riprova più tardi.",
+    "sent": "Se l'account esiste e deve ancora essere verificato, riceverai un nuovo link."
+  },
+  "reset": {
+    "invalidEmail": "Inserisci un indirizzo email valido.",
+    "unavailable": "Il servizio email non è disponibile al momento.",
+    "generic": "Se l'account esiste, riceverai un link per reimpostare la password.",
+    "invalidRequest": "Richiesta di reimpostazione non valida.",
+    "invalidLink": "Link non valido o scaduto."
+  }
+}

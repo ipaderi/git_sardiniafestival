@@ -69,7 +69,7 @@ model Event {
   titleEn      String?
   slug         String       @unique
   description  String       @db.Text
-  descriptionEn String?     @db.Text
+  descriptionTranslations Json @default("{}")
   category     String
   subcategory  String?
   subcategoryEn String?
@@ -168,7 +168,7 @@ model EventPoi {
   name        String
   nameEn      String?
   description String?
-  descriptionEn String?
+  descriptionTranslations Json @default("{}")
   address     String?
   latitude    Float?
   longitude   Float?
@@ -184,8 +184,7 @@ model FeaturedCity {
   name        String
   slug        String   @unique
   province    String
-  description String   @db.Text
-  descriptionEn String? @db.Text
+  descriptions Json     @default("{}")
   imageUrl    String?
   featured    Boolean  @default(false)
   sortOrder   Int      @default(0)

@@ -1,5 +1,9 @@
 "use client";
 
+import { dictionary } from "@/lib/dictionary";
+import publicIt from "@/messages/it/public.json";
+import publicEn from "@/messages/en/public.json";
+
 import { useEffect, useRef } from "react";
 import type { LatLngExpression, Map as LeafletMap } from "leaflet";
 
@@ -64,7 +68,7 @@ export function EventMap({ markers, center, zoom = 7.6, className = "", locale =
       for (const group of locations) {
         const marker = L.marker([group[0].latitude, group[0].longitude], {
           icon: pointIcon,
-          title: group.length === 1 ? group[0].title : `${group.length} ${locale === "en" ? "places and events" : "luoghi ed eventi"}`,
+          title: group.length === 1 ? group[0].title : `${group.length} ${dictionary(locale, publicIt, publicEn).placesAndEvents}`,
         }).addTo(map);
         const popup = document.createElement("div");
         popup.className = "sf-map-popup";
@@ -75,14 +79,14 @@ export function EventMap({ markers, center, zoom = 7.6, className = "", locale =
           if (index) item.style.marginTop = "12px";
           const kind = document.createElement("span");
           kind.className = "sf-map-popup__eyebrow";
-          kind.textContent = point.kind === "poi" ? (locale === "en" ? "Point of interest" : "Punto di interesse") : (locale === "en" ? "Event" : "Evento");
+          kind.textContent = point.kind === "poi" ? (dictionary(locale, publicIt, publicEn).pointOfInterest) : (dictionary(locale, publicIt, publicEn).event);
           const link = document.createElement("a");
           link.className = "sf-map-popup__title";
           link.href = point.href;
           link.textContent = point.title;
           const place = document.createElement("span");
           place.className = "sf-map-popup__place";
-          place.textContent = [point.place, point.approximate ? (locale === "en" ? "Approximate location: town centre" : "Posizione approssimativa: centro del comune") : ""].filter(Boolean).join(" · ");
+          place.textContent = [point.place, point.approximate ? (dictionary(locale, publicIt, publicEn).approximateLocationTownCentre) : ""].filter(Boolean).join(" · ");
           item.append(kind, link, place);
           popup.append(item);
         }
@@ -114,5 +118,5 @@ export function EventMap({ markers, center, zoom = 7.6, className = "", locale =
     };
   }, [markers, center, zoom, locale]);
 
-  return <div ref={containerRef} role="application" aria-label={locale === "en" ? "Interactive map of events and places in Sardinia" : "Mappa interattiva degli eventi e dei luoghi in Sardegna"} className={`event-map ${className}`} />;
+  return <div ref={containerRef} role="application" aria-label={dictionary(locale, publicIt, publicEn).eventMapAriaLabel} className={`event-map ${className}`} />;
 }

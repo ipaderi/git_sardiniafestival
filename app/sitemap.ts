@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { PROVINCES } from "@/lib/provinces";
 import { contentSitemapEntries, localizedSitemapEntries } from "@/lib/sitemap-entries";
+import { getLocalizedText } from "@/lib/localized-text";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.event.findMany({
       where: { status: "PUBLISHED" },
       select: {
-        slug: true, titleEn: true, descriptionEn: true, updatedAt: true, startsAt: true, endsAt: true, eventType: true,
+        slug: true, titleEn: true, descriptionTranslations: true, updatedAt: true, startsAt: true, endsAt: true, eventType: true,
         category: true, subcategory: true, location: true, comuneId: true,
         comune: { select: { slug: true } },
         dates: { select: { startsAt: true, endsAt: true, city: true, comuneId: true, comune: { select: { slug: true } } } },
@@ -28,6 +29,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     prisma.comune.findMany({ select: { name: true, slug: true } }),
   ]);
-  pages.push(...contentSitemapEntries(base, new Date(), events, comuni));
+  pages.push(...contentSitemapEntries(base, new Date(), events.map(({ descriptionTranslations, ...event }) => ({
+    ...event,
+    descriptionEn: getLocalizedText(descriptionTranslations, "en", "") || null,
+  })), comuni));
   return pages;
 }

@@ -1,3 +1,4 @@
+import { apiEventMessages, requestLocale } from "@/lib/api-locale";
 import { EventStatus } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import { eventTypes, occurrenceSchema, onlineUrlSchema, validateSchedule } from 
 import { prepareSchedule } from "@/lib/event-schedule";
 import { eventCategories } from "@/lib/event-categories";
 import { getCurrentUser } from "@/lib/authz";
+import { getLocalizedText } from "@/lib/localized-text";
 
 const eventSchema = z.object({
   title: z.string().trim().min(4).max(120),
@@ -58,22 +60,26 @@ export async function GET(request: Request) {
     omit: { contactEmail: true, organizerId: true },
     include: { dates: { orderBy: { startsAt: "asc" } } },
   });
-  return NextResponse.json({ events });
+  return NextResponse.json({ events: events.map(({ descriptionTranslations, ...event }) => ({
+    ...event,
+    descriptionEn: getLocalizedText(descriptionTranslations, "en", "") || null,
+  })) });
 }
 
 export async function POST(request: Request) {
+  const messages = apiEventMessages(request);
   const parsed = eventSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Controlla i campi obbligatori del modulo." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: messages.checkRequiredFields }, { status: 400 });
 
   const user = await getCurrentUser();
   const data = parsed.data;
-  if (data.requireAccount && !user) return NextResponse.json({ error: "Accedi per inviare un evento." }, { status: 401 });
+  if (data.requireAccount && !user) return NextResponse.json({ error: messages.loginToSubmit }, { status: 401 });
   const dates = data.dates ?? (data.startsAt ? [{ startsAt: data.startsAt, endsAt: data.endsAt }] : []);
   const input = { eventType: data.eventType, dates, comuneId: data.comuneId, location: data.city, province: data.province, venue: data.venue, onlineUrl: data.onlineUrl };
-  const scheduleError = validateSchedule(input);
+  const scheduleError = validateSchedule(input, requestLocale(request));
   if (scheduleError) return NextResponse.json({ error: scheduleError }, { status: 400 });
   const schedule = await prepareSchedule(input);
-  if (!schedule) return NextResponse.json({ error: "Seleziona comuni validi dall'elenco." }, { status: 400 });
+  if (!schedule) return NextResponse.json({ error: messages.invalidMunicipalities }, { status: 400 });
   const { dates: eventDates, ...eventSchedule } = schedule;
   const baseSlug = slugify(data.title) || "evento";
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
@@ -83,7 +89,7 @@ export async function POST(request: Request) {
       titleEn: data.titleEn || null,
       slug,
       description: data.description,
-      descriptionEn: data.descriptionEn || null,
+      descriptionTranslations: data.descriptionEn ? { en: data.descriptionEn } : {},
       category: data.category,
       subcategory: data.subcategory || null,
       subcategoryEn: data.subcategoryEn || null,
@@ -99,5 +105,5 @@ export async function POST(request: Request) {
     },
     select: { id: true, slug: true, status: true },
   });
-  return NextResponse.json({ event, message: "Evento inviato: lo pubblicheremo dopo una verifica." }, { status: 201 });
+  return NextResponse.json({ event, message: messages.eventSubmitted }, { status: 201 });
 }

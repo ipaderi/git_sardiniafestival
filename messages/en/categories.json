@@ -1,0 +1,10 @@
+{
+  "Musica": { "label": "Music", "subtitle": "Concerts and festivals", "description": "Live music, festivals and sounds of Sardinia." },
+  "Tradizione": { "label": "Traditions", "subtitle": "Festivals and celebrations", "description": "Village festivals, rituals and local traditions." },
+  "Teatro": { "label": "Theatre", "subtitle": "Stages and performances", "description": "Theatre, dance and live performances." },
+  "Arte & cultura": { "label": "Art & culture", "subtitle": "Exhibitions and talks", "description": "Exhibitions, cinema, talks and culture." },
+  "Sport": { "label": "Sport", "subtitle": "Competitions and outdoor activities", "description": "Races, activities and outdoor events." },
+  "Food & wine": { "label": "Food & wine", "subtitle": "Tastings and festivals", "description": "The island's flavours, wineries and cuisine." },
+  "Natura": { "label": "Nature", "subtitle": "Hiking and outdoor activities", "description": "Experiences in Sardinia's landscapes." },
+  "Altro": { "label": "Other", "subtitle": "Talks and gatherings", "description": "More events to enjoy in Sardinia." }
+}

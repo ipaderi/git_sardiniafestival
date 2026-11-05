@@ -1,5 +1,9 @@
 "use client";
 
+import { dictionary } from "@/lib/dictionary";
+import it from "@/messages/it/navigation.json";
+import en from "@/messages/en/navigation.json";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, CalendarDays, Sparkles } from "lucide-react";
@@ -12,7 +16,7 @@ import { useLocale } from "@/lib/use-locale";
 export function SearchForm({ compact = false, defaults }: { compact?: boolean; defaults?: { q?: string; city?: string; from?: string } }) {
   const router = useRouter();
   const locale = useLocale();
-  const en = locale === "en";
+  const t = dictionary(locale, it, en);
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -39,7 +43,7 @@ export function SearchForm({ compact = false, defaults }: { compact?: boolean; d
         }
         query.set("city", comune.name);
       } catch {
-        setMessage(en ? "Could not load the selected town. Please try again." : "Non riesco a caricare il comune selezionato. Riprova.");
+        setMessage(t.searchError);
         setSearching(false);
         return;
       }
@@ -52,17 +56,17 @@ export function SearchForm({ compact = false, defaults }: { compact?: boolean; d
     <form onSubmit={submit} className={`grid gap-3 rounded-2xl bg-white p-3 shadow-[0_22px_60px_rgba(5,32,54,.18)] md:grid-cols-[1.25fr_1fr_1fr_auto] ${compact ? "" : ""}`}>
       <label className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 px-4 py-2.5 focus-within:border-sea-bright focus-within:ring-2 focus-within:ring-sea-bright/20">
         <Search className="shrink-0 text-sea" size={19} aria-hidden="true" />
-        <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">{en ? "What are you looking for?" : "Cosa cerchi?"}</span><Input name="q" defaultValue={defaults?.q} placeholder={en ? "Jazz, festivals, theatre…" : "Jazz, sagra, teatro…"} className="h-6 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">{t.searchWhat}</span><Input name="q" defaultValue={defaults?.q} placeholder={t.searchPlaceholder} className="h-6 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0" /></span>
       </label>
       <label className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 px-4 py-2.5 focus-within:border-sea-bright focus-within:ring-2 focus-within:ring-sea-bright/20">
         <MapPin className="shrink-0 text-sea" size={19} aria-hidden="true" />
-        <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">{en ? "Where?" : "Dove?"}</span><ComuneSelect locale={locale} name="comuneId" defaultName={defaults?.city} className="h-6 w-full border-0 bg-transparent p-0 text-sm text-ink focus:outline-none" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">{t.searchWhere}</span><ComuneSelect locale={locale} name="comuneId" defaultName={defaults?.city} className="h-6 w-full border-0 bg-transparent p-0 text-sm text-ink focus:outline-none" /></span>
       </label>
       <label className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 px-4 py-2.5 focus-within:border-sea-bright focus-within:ring-2 focus-within:ring-sea-bright/20">
         <CalendarDays className="shrink-0 text-sea" size={19} aria-hidden="true" />
-        <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">{en ? "From when?" : "Da quando?"}</span><Input name="from" defaultValue={defaults?.from} type="date" className="h-6 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-[.12em] text-slate-500">{t.searchFrom}</span><Input name="from" defaultValue={defaults?.from} type="date" className="h-6 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0" /></span>
       </label>
-      <Button size="lg" type="submit" className="h-auto min-h-[58px] rounded-xl" disabled={searching}>{searching ? <><Search size={17} className="animate-pulse" /> {en ? "Searching…" : "Ricerca…"}</> : <><Search size={17} /> <span className="md:hidden lg:inline">{en ? "Find events" : "Cerca eventi"}</span><span className="hidden md:inline lg:hidden">{en ? "Search" : "Cerca"}</span></>}</Button>
+      <Button size="lg" type="submit" className="h-auto min-h-[58px] rounded-xl" disabled={searching}>{searching ? <><Search size={17} className="animate-pulse" /> {t.searching}</> : <><Search size={17} /> <span className="md:hidden lg:inline">{t.findEvents}</span><span className="hidden md:inline lg:hidden">{t.search}</span></>}</Button>
       {message && <p role="status" className="text-xs text-muted md:col-span-4">{message}</p>}
     </form>
   );
@@ -70,5 +74,5 @@ export function SearchForm({ compact = false, defaults }: { compact?: boolean; d
 
 export function SearchHint() {
   const locale = useLocale();
-  return <p className="mt-4 flex items-center gap-2 text-xs text-blue-100/70"><Sparkles size={14} className="text-teal-200" /> {locale === "en" ? "Choose a Sardinian town to discover events near you" : "Scegli un comune della Sardegna e scopri gli appuntamenti vicino a te"}</p>;
+  return <p className="mt-4 flex items-center gap-2 text-xs text-blue-100/70"><Sparkles size={14} className="text-teal-200" /> {dictionary(locale, it, en).searchHint}</p>;
 }
