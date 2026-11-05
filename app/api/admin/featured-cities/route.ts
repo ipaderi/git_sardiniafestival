@@ -17,6 +17,33 @@ const inputSchema = z.object({
   sortOrder: z.number().int().min(0).max(10000),
 }).strict();
 
+const orderSchema = z.object({
+  order: z.array(z.string().trim().min(1).max(100)).min(1).max(1000),
+  toggle: z.object({ id: z.string().trim().min(1).max(100), featured: z.boolean() }).strict().optional(),
+}).strict();
+
+/** Save the whole list order, and optionally one town's active state, in a single step. */
+export async function PATCH(request: Request) {
+  const messages = apiEventMessages(request);
+  if (!(await requireAdmin())) return NextResponse.json({ error: "unauthorized", message: messages.unauthorized }, { status: 403 });
+  const parsed = orderSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "invalid_data", message: messages.invalidCityData }, { status: 400 });
+  const { order, toggle } = parsed.data;
+  const existing = await prisma.featuredCity.findMany({ select: { id: true, sortOrder: true, featured: true } });
+  const known = new Set(existing.map((city) => city.id));
+  // A list that does not match what is saved was changed elsewhere: renumbering it would lose that change.
+  const matches = new Set(order).size === order.length && order.length === known.size && order.every((id) => known.has(id));
+  if (!matches || (toggle && !known.has(toggle.id))) return NextResponse.json({ error: "stale_order", message: messages.invalidCityData }, { status: 409 });
+  const updates = existing.flatMap((city) => {
+    const sortOrder = order.indexOf(city.id) * 10;
+    const featured = toggle?.id === city.id ? toggle.featured : city.featured;
+    if (sortOrder === city.sortOrder && featured === city.featured) return [];
+    return [prisma.featuredCity.update({ where: { id: city.id }, data: { sortOrder, featured } })];
+  });
+  await prisma.$transaction(updates);
+  return NextResponse.json({ ok: true });
+}
+
 export async function GET(request: Request) {
   const messages = apiEventMessages(request);
   if (!(await requireAdmin())) return NextResponse.json({ error: "unauthorized", message: messages.unauthorized }, { status: 403 });
