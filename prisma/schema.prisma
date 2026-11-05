@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EventStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  CANCELLED
+}
+
+enum EventType {
+  SINGLE_DAY
+  MULTI_DAY
+  MULTI_LOCATION
+  ONLINE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  events        Event[]
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model Event {
+  id           String       @id @default(cuid())
+  title        String
+  slug         String       @unique
+  description  String       @db.Text
+  category     String
+  subcategory  String?
+  location     String?
+  province     String?
+  venue        String?
+  address      String?
+  latitude     Float?
+  longitude    Float?
+  startsAt     DateTime
+  endsAt       DateTime?
+  image        String?
+  website      String?
+  eventType    EventType    @default(SINGLE_DAY)
+  onlineUrl    String?
+  contactEmail String?
+  price        String?
+  status       EventStatus  @default(PENDING)
+  featured     Boolean      @default(false)
+  comuneId     String?
+  organizerId  String?
+  comune       Comune?      @relation(fields: [comuneId], references: [id], onDelete: SetNull)
+  organizer    User?        @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+  dates        EventDate[]
+  images       EventImage[]
+  pois         EventPoi[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status, startsAt])
+  @@index([category, province])
+  @@index([comuneId, startsAt])
+}
+
+model Comune {
+  id                String   @id @default(cuid())
+  istatCode         String   @unique
+  slug              String   @unique
+  name              String
+  provinceCode      String
+  provinceName      String
+  latitude          Float
+  longitude         Float
+  areaSqKm          Float?
+  isProvinceCapital Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  events            Event[]
+  eventDates        EventDate[]
+
+  @@index([provinceCode, name])
+}
+
+model EventDate {
+  id        String    @id @default(cuid())
+  eventId   String
+  startsAt  DateTime
+  endsAt    DateTime?
+  label     String?
+  city      String?
+  province  String?
+  venue     String?
+  address   String?
+  latitude  Float?
+  longitude Float?
+  comuneId  String?
+  sortOrder Int       @default(0)
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  comune    Comune?   @relation(fields: [comuneId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+
+  @@index([eventId, startsAt])
+  @@index([comuneId, startsAt])
+}
+
+model EventImage {
+  id          String   @id @default(cuid())
+  eventId     String
+  objectKey   String   @unique
+  contentType String
+  alt         String?
+  isCover     Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([eventId, sortOrder])
+}
+
+model EventPoi {
+  id          String   @id @default(cuid())
+  eventId     String
+  name        String
+  description String?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  sortOrder   Int      @default(0)
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([eventId, sortOrder])
+}
+
+model FeaturedCity {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  province    String
+  description String   @db.Text
+  imageUrl    String?
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([featured, sortOrder])
+}
+
+model GeocodeCache {
+  query       String   @id
+  displayName String
+  city        String?
+  province    String?
+  latitude    Float
+  longitude   Float
+  boundingBox Json?
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+}

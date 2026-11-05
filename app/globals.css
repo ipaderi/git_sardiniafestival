@@ -1,0 +1,38 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme inline {
+  --color-ink: #082848;
+  --color-ink-soft: #1e4362;
+  --color-sea: #076b82;
+  --color-sea-bright: #20b6a7;
+  --color-coral: #ef7355;
+  --color-sand: #f4f0e7;
+  --color-paper: #fcfbf8;
+  --color-muted: #667b8b;
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-outfit);
+}
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: #fcfbf8; color: #082848; font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif; }
+button, input, select, textarea { font: inherit; }
+::selection { background: #20b6a7; color: #06253c; }
+.focus-ring:focus-visible { outline: 3px solid #20b6a7; outline-offset: 3px; }
+.hero-noise { background-image: radial-gradient(circle at 78% 35%, rgba(28, 178, 171, .18), transparent 27%), radial-gradient(circle at 14% 100%, rgba(239, 115, 85, .12), transparent 31%); }
+.island-grid { background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 48px 48px; mask-image: linear-gradient(to left, black, transparent); }
+.event-map { min-height: 25rem; width: 100%; background: #eaf0eb; z-index: 0; }
+.sf-map-marker { display: grid; place-items: center; border: 0; background: transparent; }
+.sf-map-marker__dot { display: block; width: 17px; height: 17px; border: 4px solid #fff; border-radius: 50%; background: #0d9b8b; box-shadow: 0 2px 10px rgb(8 40 72 / 35%); }
+.sf-map-popup { display: grid; gap: 4px; min-width: 150px; font-family: var(--font-dm-sans), sans-serif; }
+.sf-map-popup__eyebrow { color: #078477; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.sf-map-popup__title { color: #082848; font-size: 13px; font-weight: 750; text-decoration: none; }
+.sf-map-popup__place { color: #637789; font-size: 11px; }
+.leaflet-container a.leaflet-popup-close-button { color: #607887; }
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
