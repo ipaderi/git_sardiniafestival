@@ -39,6 +39,52 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   events        Event[]
+  mcpGrants     McpGrant[]
+}
+
+// OAuth grants are separate from browser sessions. Revoking a grant immediately
+// invalidates all of its access and refresh tokens.
+model McpGrant {
+  id             String    @id @default(cuid())
+  userId         String
+  clientId       String
+  resource       String
+  scope          String
+  consentNonceHash String   @unique
+  sessionVersion Int
+  createdAt      DateTime  @default(now())
+  revokedAt      DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codes          McpAuthorizationCode[]
+  tokens         McpToken[]
+
+  @@index([userId, revokedAt])
+}
+
+model McpAuthorizationCode {
+  hash         String   @id
+  grantId      String
+  challenge    String
+  redirectUri  String
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  grant        McpGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+model McpToken {
+  hash       String    @id
+  grantId    String
+  type       String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+  grant      McpGrant  @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
 }
 
 model EmailVerificationToken {

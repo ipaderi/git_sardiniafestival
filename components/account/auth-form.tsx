@@ -28,10 +28,15 @@ export function AccountAuthForm({ locale, mode, token = "", callbackUrl }: { loc
     }
     try {
       if (mode === "login") {
-        const destination = callbackUrl?.startsWith(`/${locale}/`) && !callbackUrl.startsWith("//") ? callbackUrl : `/${locale}/dashboard`;
+        const destination = callbackUrl && ((callbackUrl.startsWith(`/${locale}/`) && !callbackUrl.startsWith("//")) || callbackUrl.startsWith("/api/oauth/authorize?")) ? callbackUrl : `/${locale}/dashboard`;
         const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: destination });
         if (!result?.ok) throw new Error(t.incorrectEmailOrPassword);
-        router.push(destination); router.refresh(); return;
+        if (destination.startsWith("/api/oauth/authorize?")) {
+          window.location.assign(destination);
+        } else {
+          router.push(destination); router.refresh();
+        }
+        return;
       }
       const endpoint = mode === "register" ? "/api/register" : mode === "verify-resend" ? "/api/auth/resend-verification" : "/api/auth/password-reset";
       const body = mode === "register" ? { name: values.get("name"), email, password, locale } : token ? { token, password, locale } : { email, locale };

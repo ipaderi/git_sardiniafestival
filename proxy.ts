@@ -46,4 +46,4 @@ export default auth((request) => {
   return NextResponse.next({ request: { headers: requestHeaders } });
 });
 
-export const config = { matcher: ["/((?!api|_next|brand/|favicon.ico|robots.txt|sitemap.xml).*)"] };
+export const config = { matcher: ["/((?!api|_next|\\.well-known/|brand/|favicon.ico|robots.txt|sitemap.xml).*)"] };

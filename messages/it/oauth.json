@@ -1,0 +1,7 @@
+{
+  "title": "Collega ChatGPT",
+  "description": "ChatGPT potrà inviare eventi a tuo nome a SardiniaFestival. Gli eventi saranno sottoposti a revisione prima della pubblicazione.",
+  "revoke": "Puoi revocare il collegamento dalla tua dashboard.",
+  "allow": "Consenti",
+  "deny": "Annulla"
+}

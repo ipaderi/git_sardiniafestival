@@ -1,0 +1,10 @@
+{
+  "title": "Connected applications",
+  "description": "Manage the applications authorised to submit events with your account.",
+  "back": "Back to dashboard",
+  "empty": "You have no connected applications.",
+  "connectedOn": "Connected on",
+  "permissions": "Can search municipalities and categories and submit events for review on your behalf.",
+  "revoke": "Revoke access",
+  "revokeHelp": "Revoking access prevents new requests. Previously submitted events remain in your account."
+}

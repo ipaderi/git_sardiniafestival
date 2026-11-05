@@ -1,0 +1,10 @@
+{
+  "title": "Applicazioni collegate",
+  "description": "Gestisci le applicazioni autorizzate a inviare eventi con il tuo account.",
+  "back": "Torna alla dashboard",
+  "empty": "Non hai applicazioni collegate.",
+  "connectedOn": "Collegata il",
+  "permissions": "Può cercare comuni e categorie e inviare eventi a tuo nome per la revisione.",
+  "revoke": "Revoca accesso",
+  "revokeHelp": "La revoca impedisce nuovi accessi. Gli eventi già inviati restano nel tuo account."
+}

@@ -1,0 +1,7 @@
+{
+  "title": "Connect ChatGPT",
+  "description": "ChatGPT will be able to submit events to SardiniaFestival on your behalf. Events will be reviewed before publication.",
+  "revoke": "You can revoke this connection from your dashboard.",
+  "allow": "Allow",
+  "deny": "Cancel"
+}

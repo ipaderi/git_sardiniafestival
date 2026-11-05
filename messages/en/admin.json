@@ -131,6 +131,7 @@
     "hello": "Hello",
     "welcome": "welcome",
     "administration": "Administration",
+    "connectedApps": "Connected applications",
     "online": "Online",
     "yourAccount": "Your account",
     "createAnEvent": "Create an event",
