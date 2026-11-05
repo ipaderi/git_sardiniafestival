@@ -17,7 +17,7 @@ Portale eventi per scoprire e condividere festival, concerti, tradizioni, teatro
 4. Carica i 377 comuni della Sardegna con `npm run db:seed:comuni`. Per caricare i comuni e creare o aggiornare l'account amministratore usando `ADMIN_EMAIL` e `ADMIN_PASSWORD`, esegui `npm run db:seed`.
 5. Avvia Next.js con `npm run dev`.
 
-Gli eventi inviati dal wizard entrano nello stato `PENDING`. Un amministratore li approva o li rifiuta nella console `/it/dashboard/admin/events`. La console `/it/dashboard/admin/users` consente di assegnare ruoli e sospendere account; API e pagine admin verificano il ruolo sul server. Le sessioni durano 14 giorni e vengono invalidate quando la password viene reimpostata.
+Gli eventi inviati dal wizard entrano nello stato `PENDING`. Un amministratore li approva o li rifiuta nella console `/it/dashboard/admin/events`, da cui si accede alla scheda (`/events/[id]`), alla modifica (`/events/[id]/edit`) e alla creazione (`/events/new`). La console `/it/dashboard/admin/users` consente di assegnare ruoli e sospendere account; API e pagine admin verificano il ruolo sul server. Le sessioni durano 14 giorni e vengono invalidate quando la password viene reimpostata.
 
 Le email di verifica richiedono le variabili `SMTP_*` indicate in `.env.example`. Le immagini degli eventi usano uno storage compatibile S3 esterno: configura `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` e, se necessario, `S3_FORCE_PATH_STYLE`. Le credenziali restano sul server; la gallery pubblica serve le immagini attraverso il portale.
 

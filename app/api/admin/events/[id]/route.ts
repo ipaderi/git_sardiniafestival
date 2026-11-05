@@ -31,6 +31,7 @@ const updateSchema = z.object({
   price: z.string().trim().max(80).optional(),
   priceEn: z.string().trim().max(80).nullable().optional(),
   website: z.string().url().optional().or(z.literal("")),
+  contactEmail: z.string().trim().email().max(254).optional().or(z.literal("")),
 }).strict();
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -85,6 +86,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     ...(other.price !== undefined ? { price: other.price || null } : {}),
     ...(other.priceEn !== undefined ? { priceEn: other.priceEn || null } : {}),
     ...(other.website !== undefined ? { website: other.website || null } : {}),
+    ...(other.contactEmail !== undefined ? { contactEmail: other.contactEmail || null } : {}),
     ...scheduleData,
   }, include: { dates: { orderBy: { startsAt: "asc" } } } });
   const { descriptionTranslations, ...eventFields } = event;

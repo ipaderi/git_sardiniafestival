@@ -8,6 +8,7 @@ import { useId } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ComuneSelect } from "@/components/site/comune-select";
+import { toLocalDateTime } from "@/lib/event-wall-clock";
 
 export type EventType = "SINGLE_DAY" | "MULTI_DAY" | "MULTI_LOCATION" | "ONLINE";
 export type ScheduleDate = {
@@ -30,19 +31,6 @@ export const eventTypeLabels: Record<EventType, string> = it.schedule.eventTypes
 
 export function emptyScheduleDate(): ScheduleDate {
   return { startsAt: "", endsAt: "", label: "", labelEn: "", venue: "", address: "", city: "", province: "", comuneId: "" };
-}
-
-const romeDateTime = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit",
-  hour: "2-digit", minute: "2-digit", hourCycle: "h23",
-});
-
-export function toLocalDateTime(value: string | Date | null | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const parts = Object.fromEntries(romeDateTime.formatToParts(date).map(({ type, value: part }) => [type, part]));
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
 
 // Map a wall-clock time in Rome to its UTC instant, independently of the browser timezone.
@@ -90,34 +78,42 @@ export function serializeSchedule(type: EventType, dates: ScheduleDate[]) {
   }));
 }
 
+/** Returns the first problem with a single occurrence, or "" when it is complete. */
+export function occurrenceError(type: EventType, date: ScheduleDate, locale = "it") {
+  const t = dictionary(locale, it, enMessages).schedule;
+  if (!date.startsAt) return t.enterAStartDateAndTime;
+  const start = romeTimeToInstant(date.startsAt, date.originalStartsAt);
+  const end = date.endsAt ? romeTimeToInstant(date.endsAt, date.originalEndsAt) : null;
+  if (!start || (date.endsAt && !end)) return t.checkTheTimesThisTimeDoesNot;
+  if (end && end < start) return t.anOccurrenceMustEndOnOrAfter;
+  if (type === "MULTI_LOCATION" && (!date.comuneId || !date.venue.trim())) return t.chooseAMunicipalityAndVenueForEach;
+  return "";
+}
+
 export function validateSchedule(type: EventType, dates: ScheduleDate[], locale = "it") {
   const t = dictionary(locale, it, enMessages).schedule;
   const visibleDates = type === "SINGLE_DAY" ? dates.slice(0, 1) : dates;
   if (!visibleDates.length || visibleDates.length > 100) return t.enterBetween1And100Occurrences;
   for (const date of visibleDates) {
-    const start = romeTimeToInstant(date.startsAt, date.originalStartsAt);
-    const end = date.endsAt ? romeTimeToInstant(date.endsAt, date.originalEndsAt) : null;
-    if (!start || (date.endsAt && !end)) return t.checkTheTimesThisTimeDoesNot;
-    if (end && end < start) return t.anOccurrenceMustEndOnOrAfter;
+    const error = occurrenceError(type, date, locale);
+    if (error) return error;
   }
   if (type === "MULTI_DAY" && visibleDates.length === 1 && (!visibleDates[0].endsAt || visibleDates[0].startsAt.slice(0, 10) === visibleDates[0].endsAt.slice(0, 10))) return t.forAMultiDayEventAddAn;
-  if (type === "MULTI_LOCATION" && (visibleDates.length < 2 || visibleDates.some((date) => !date.comuneId || !date.venue.trim()))) return t.chooseAMunicipalityAndVenueForEach;
+  if (type === "MULTI_LOCATION" && visibleDates.length < 2) return t.chooseAMunicipalityAndVenueForEach;
   return "";
 }
 
-export function EventScheduleFields({ type, onTypeChange, dates, onDatesChange, compact = false, locale }: {
+export function EventScheduleFields({ type, onTypeChange, dates, onDatesChange, locale }: {
   type: EventType;
   onTypeChange: (type: EventType) => void;
   dates: ScheduleDate[];
   onDatesChange: (dates: ScheduleDate[]) => void;
-  compact?: boolean;
   locale?: string;
 }) {
   const t = dictionary(locale, it, enMessages).schedule;
   const id = useId();
-  const label = compact ? "grid gap-1.5 text-[11px] font-bold text-ink" : "grid gap-2 text-xs font-bold text-ink";
-  const input = compact ? "focus-ring h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal text-ink" : undefined;
-  const select = compact ? input : "focus-ring h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-ink";
+  const label = "grid gap-2 text-xs font-bold text-ink";
+  const select = "focus-ring h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-ink";
   const visibleDates = type === "SINGLE_DAY" ? dates.slice(0, 1) : dates;
   function update(index: number, changes: Partial<ScheduleDate>) {
     onDatesChange(dates.map((date, i) => i === index ? { ...date, ...changes } : date));
@@ -136,16 +132,16 @@ export function EventScheduleFields({ type, onTypeChange, dates, onDatesChange, 
     <div className="space-y-3">
       {visibleDates.map((date, index) => <fieldset key={index} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
         <legend className="px-1 text-xs font-bold text-ink">{type === "SINGLE_DAY" ? (t.dateAndTime) : `${t.occurrence} ${index + 1}`}</legend>
-        <label className={label}>{t.start} *<Input className={input} required type="datetime-local" value={date.startsAt} onChange={(event) => update(index, { startsAt: event.target.value })} /></label>
-        <label className={label}>{t.endOptional}<Input className={input} type="datetime-local" value={date.endsAt} onChange={(event) => update(index, { endsAt: event.target.value })} /></label>
+        <label className={label}>{t.start} *<Input required type="datetime-local" value={date.startsAt} onChange={(event) => update(index, { startsAt: event.target.value })} /></label>
+        <label className={label}>{t.endOptional}<Input type="datetime-local" value={date.endsAt} onChange={(event) => update(index, { endsAt: event.target.value })} /></label>
         {type !== "SINGLE_DAY" && <>
-          <label className={label}>{t.occurrenceNameItalianOptional}<Input className={input} maxLength={120} value={date.label} onChange={(event) => update(index, { label: event.target.value })} placeholder={t.italianExample} /></label>
-          <label className={label}>{t.occurrenceNameEnglishOptional}<Input className={input} maxLength={120} value={date.labelEn || ""} onChange={(event) => update(index, { labelEn: event.target.value })} placeholder={t.englishExample} /></label>
+          <label className={label}>{t.occurrenceNameItalianOptional}<Input maxLength={120} value={date.label} onChange={(event) => update(index, { label: event.target.value })} placeholder={t.italianExample} /></label>
+          <label className={label}>{t.occurrenceNameEnglishOptional}<Input maxLength={120} value={date.labelEn || ""} onChange={(event) => update(index, { labelEn: event.target.value })} placeholder={t.englishExample} /></label>
         </>}
         {type === "MULTI_LOCATION" && <>
           <label className={label}>{t.municipalityAndProvince} *<ComuneSelect locale={locale} required className={select} value={date.comuneId} onChange={(comune) => update(index, { comuneId: comune?.id || "", city: comune?.name || "", province: comune?.provinceCode || "", latitude: null, longitude: null })} /></label>
-          <label className={label}>{t.venue} *<Input className={input} required minLength={2} maxLength={120} value={date.venue} onChange={(event) => update(index, { venue: event.target.value, latitude: null, longitude: null })} placeholder={t.squareTheatreVenue} /></label>
-          <label className={label}>{t.addressOptional}<Input className={input} maxLength={200} value={date.address} onChange={(event) => update(index, { address: event.target.value, latitude: null, longitude: null })} /></label>
+          <label className={label}>{t.venue} *<Input required minLength={2} maxLength={120} value={date.venue} onChange={(event) => update(index, { venue: event.target.value, latitude: null, longitude: null })} placeholder={t.squareTheatreVenue} /></label>
+          <label className={label}>{t.addressOptional}<Input maxLength={200} value={date.address} onChange={(event) => update(index, { address: event.target.value, latitude: null, longitude: null })} /></label>
         </>}
         {type !== "SINGLE_DAY" && dates.length > (type === "MULTI_LOCATION" ? 2 : 1) && <div className="sm:col-span-2"><button type="button" className="focus-ring inline-flex items-center gap-1 rounded px-1 py-1 text-xs font-bold text-rose-700" onClick={() => onDatesChange(dates.filter((_, i) => i !== index))}><Trash2 size={14} /> {t.removeOccurrence}</button></div>}
       </fieldset>)}

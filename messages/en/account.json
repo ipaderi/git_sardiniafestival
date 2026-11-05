@@ -89,6 +89,7 @@
     ]
   },
   "schedule": {
+    "enterAStartDateAndTime": "Enter the start date and time.",
     "enterBetween1And100Occurrences": "Enter between 1 and 100 occurrences.",
     "checkTheTimesThisTimeDoesNot": "Check the times: this time does not exist in Italy, for example during the daylight saving change.",
     "anOccurrenceMustEndOnOrAfter": "An occurrence must end on or after its start.",
