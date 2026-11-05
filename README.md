@@ -17,7 +17,7 @@ Portale eventi per scoprire e condividere festival, concerti, tradizioni, teatro
 4. Carica i 377 comuni della Sardegna con `npm run db:seed:comuni`. Per caricare i comuni e creare o aggiornare l'account amministratore usando `ADMIN_EMAIL` e `ADMIN_PASSWORD`, esegui `npm run db:seed`.
 5. Avvia Next.js con `npm run dev`.
 
-Le segnalazioni pubbliche entrano nello stato `PENDING`. Un amministratore le approva o le rifiuta nella console `/admin/eventi`. La console `/admin/utenti` consente di assegnare ruoli e sospendere account; API e pagine admin verificano il ruolo sul server. Le sessioni hanno durata di 14 giorni.
+Gli eventi inviati dal wizard entrano nello stato `PENDING`. Un amministratore li approva o li rifiuta nella console `/it/dashboard/admin/events`. La console `/it/dashboard/admin/users` consente di assegnare ruoli e sospendere account; API e pagine admin verificano il ruolo sul server. Le sessioni durano 14 giorni e vengono invalidate quando la password viene reimpostata.
 
 Le email di verifica richiedono le variabili `SMTP_*` indicate in `.env.example`. Le immagini degli eventi usano uno storage compatibile S3 esterno: configura `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` e, se necessario, `S3_FORCE_PATH_STYLE`. Le credenziali restano sul server; la gallery pubblica serve le immagini attraverso il portale.
 
@@ -25,13 +25,17 @@ Le email di verifica richiedono le variabili `SMTP_*` indicate in `.env.example`
 
 Il seed `prisma/data/comuni-sardegna.json` contiene i 377 comuni presenti nel database fornito, identificati tramite codice ISTAT e arricchiti con coordinate e provincia. Il file sorgente è distribuito con licenza MIT da Garda Informatica; i dettagli sono in [prisma/data/README.md](prisma/data/README.md). Il seed è idempotente e collega agli identificativi canonici gli eventi già presenti quando il campo città corrisponde al nome di un comune.
 
-Le pagine locali usano URL parlanti: `/citta/cagliari` e `/sagre-a/cagliari`. Gli eventi sono associati ai comuni tramite chiave canonica. La pagina della città mostra tutti gli eventi pubblicati, distinguendo quelli futuri o in corso da quelli passati; la pagina delle sagre mostra gli appuntamenti futuri o in corso. Le pagine prive di eventi hanno `noindex` e non entrano nella sitemap.
+Gli eventi sono associati ai comuni tramite chiave canonica. Le pagine della città e della provincia distinguono gli eventi futuri o in corso da quelli passati. Le pagine città e categoria prive di eventi hanno `noindex` e non entrano nella sitemap; le province elencano anche i comuni e sono indicizzabili.
 
 ## Struttura dei permalink
 
-- `/categorie` raccoglie le categorie e `/categorie/musica` mostra gli eventi della categoria Musica. Le etichette come “Concerti e festival” descrivono la categoria: eventuali sottocategorie avranno un proprio segmento solo quando saranno gestite e filtrate come tali.
-- `/eventi` raccoglie gli eventi e `/eventi/[slug]` identifica una scheda. Le ricerche con filtri restano navigabili, indicano `/eventi` come canonical e sono escluse dall'indicizzazione.
-- Le pagine di categoria e delle città entrano nella sitemap quando contengono eventi pubblicati; le pagine delle sagre entrano quando hanno appuntamenti futuri o in corso. Gli indirizzi nelle sitemap usano `NEXT_PUBLIC_SITE_URL`, che va impostato al dominio pubblico canonico nell'ambiente di deploy.
+- Tutte le pagine pubbliche usano il prefisso `/it` o `/en`. La lingua iniziale segue la preferenza salvata o il browser; il selettore permette di cambiarla. I testi inglesi degli eventi, delle occorrenze, dei punti di interesse, delle immagini e delle città in evidenza sono facoltativi; quando mancano viene mostrato il testo originale.
+- `/it/events` è il catalogo con mappa; `/it/event/[slug]` è la scheda dell'evento.
+- `/it/events/category/musica` raggruppa la categoria; le sottocategorie effettivamente associate agli eventi aggiungono un segmento.
+- `/it/events/city` è l'indice dei comuni; `/it/events/city/abbasanta` e `/it/events/city/abbasanta/musica` sono i percorsi locali.
+- `/it/events/province` è l'indice delle province; `/it/events/province/sassari` raggruppa comuni ed eventi della provincia.
+- `/it/auth/login`, `/it/auth/register`, `/it/auth/password-reset`, `/it/dashboard` e `/it/dashboard/crea-evento` gestiscono account ed eventi. Per l'inglese si sostituisce `/it` con `/en`.
+- Le pagine di categoria e delle città entrano nella sitemap quando contengono eventi pubblicati. Gli indirizzi nella sitemap usano `NEXT_PUBLIC_SITE_URL`, da impostare al dominio pubblico canonico nell'ambiente di deploy.
 
 In produzione il calendario mostra solo eventi salvati e approvati nel database.
 

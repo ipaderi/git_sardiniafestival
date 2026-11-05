@@ -16,7 +16,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try { form = await request.formData(); } catch { return NextResponse.json({ error: "File non valido." }, { status: 400 }); }
   const file = form.get("file");
   const alt = String(form.get("alt") || "").trim();
-  if (!(file instanceof File) || !file.size || file.size > maxBytes || alt.length > 180) return NextResponse.json({ error: "Seleziona un'immagine fino a 8 MB e usa un testo alternativo di massimo 180 caratteri." }, { status: 400 });
+  const altEn = String(form.get("altEn") || "").trim();
+  if (!(file instanceof File) || !file.size || file.size > maxBytes || alt.length > 180 || altEn.length > 180) return NextResponse.json({ error: "Seleziona un'immagine fino a 8 MB e usa un testo alternativo di massimo 180 caratteri." }, { status: 400 });
   const bytes = Buffer.from(await file.arrayBuffer());
   const imageType = detectImageType(bytes);
   if (!imageType || imageType.type !== file.type) return NextResponse.json({ error: "Sono consentiti file JPEG, PNG, WebP e GIF validi." }, { status: 400 });
@@ -29,7 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       if (!event) throw new Error("Evento non trovato.");
       if (event._count.images >= 20) throw new Error("È possibile caricare fino a 20 immagini per evento.");
       const cover = event._count.images === 0 && !event.image;
-      const created = await tx.eventImage.create({ data: { eventId: id, objectKey: key, contentType: imageType.type, alt: alt || null, isCover: cover, sortOrder: event._count.images } });
+      const created = await tx.eventImage.create({ data: { eventId: id, objectKey: key, contentType: imageType.type, alt: alt || null, altEn: altEn || null, isCover: cover, sortOrder: event._count.images } });
       if (cover) await tx.event.update({ where: { id }, data: { image: `/api/images/${created.id}` } });
       return created;
     }, { isolationLevel: "Serializable" });

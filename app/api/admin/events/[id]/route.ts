@@ -5,13 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { eventTypes, occurrenceSchema, onlineUrlSchema, validateSchedule } from "@/lib/event-input";
 import { prepareSchedule } from "@/lib/event-schedule";
 import { deleteImage } from "@/lib/s3";
+import { eventCategories } from "@/lib/event-categories";
 
 const updateSchema = z.object({
   status: z.enum(["PENDING", "PUBLISHED", "REJECTED", "CANCELLED"]).optional(),
   featured: z.boolean().optional(),
   title: z.string().trim().min(4).max(120).optional(),
-  category: z.string().trim().min(2).max(48).optional(),
+  titleEn: z.string().trim().max(120).nullable().optional(),
+  category: z.string().trim().refine((value) => eventCategories.some((category) => category.name === value)).optional(),
   description: z.string().trim().min(30).max(5000).optional(),
+  descriptionEn: z.string().trim().max(5000).nullable().optional(),
+  subcategory: z.string().trim().max(80).nullable().optional(),
+  subcategoryEn: z.string().trim().max(80).nullable().optional(),
   location: z.string().trim().max(80).nullable().optional(),
   province: z.string().trim().max(3).nullable().optional(),
   venue: z.string().trim().max(120).nullable().optional(),
@@ -22,6 +27,7 @@ const updateSchema = z.object({
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().nullable().optional().or(z.literal("")),
   price: z.string().trim().max(80).optional(),
+  priceEn: z.string().trim().max(80).nullable().optional(),
   website: z.string().url().optional().or(z.literal("")),
 }).strict();
 
@@ -38,7 +44,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (scheduleChanged) {
     const currentDates = saved.dates.length ? saved.dates.map((date) => ({
       startsAt: date.startsAt.toISOString(), endsAt: date.endsAt?.toISOString() ?? null,
-      label: date.label, city: date.city, province: date.province, venue: date.venue,
+      label: date.label, labelEn: date.labelEn, city: date.city, province: date.province, venue: date.venue,
       address: date.address, latitude: date.latitude, longitude: date.longitude, comuneId: date.comuneId,
     })) : [{ startsAt: saved.startsAt.toISOString(), endsAt: saved.endsAt?.toISOString() ?? null }];
     // Legacy clients can still update the first occurrence through startsAt/endsAt.
@@ -69,7 +75,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   const event = await prisma.event.update({ where: { id }, data: {
     ...other,
+    ...(other.titleEn !== undefined ? { titleEn: other.titleEn || null } : {}),
+    ...(other.descriptionEn !== undefined ? { descriptionEn: other.descriptionEn || null } : {}),
+    ...(other.subcategory !== undefined ? { subcategory: other.subcategory || null } : {}),
+    ...(other.subcategoryEn !== undefined ? { subcategoryEn: other.subcategoryEn || null } : {}),
     ...(other.price !== undefined ? { price: other.price || null } : {}),
+    ...(other.priceEn !== undefined ? { priceEn: other.priceEn || null } : {}),
     ...(other.website !== undefined ? { website: other.website || null } : {}),
     ...scheduleData,
   }, include: { dates: { orderBy: { startsAt: "asc" } } } });

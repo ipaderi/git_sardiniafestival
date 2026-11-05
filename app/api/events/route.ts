@@ -1,16 +1,21 @@
 import { EventStatus } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
 import { eventTypes, occurrenceSchema, onlineUrlSchema, validateSchedule } from "@/lib/event-input";
 import { prepareSchedule } from "@/lib/event-schedule";
+import { eventCategories } from "@/lib/event-categories";
+import { getCurrentUser } from "@/lib/authz";
 
 const eventSchema = z.object({
   title: z.string().trim().min(4).max(120),
-  category: z.string().trim().min(2).max(48),
+  titleEn: z.string().trim().max(120).optional().or(z.literal("")),
+  category: z.string().trim().refine((value) => eventCategories.some((category) => category.name === value)),
   description: z.string().trim().min(30).max(5000),
+  descriptionEn: z.string().trim().max(5000).optional().or(z.literal("")),
+  subcategory: z.string().trim().max(80).optional().or(z.literal("")),
+  subcategoryEn: z.string().trim().max(80).nullable().optional(),
   city: z.string().trim().max(80).nullable().optional(),
   province: z.string().trim().max(3).nullable().optional(),
   venue: z.string().trim().max(120).nullable().optional(),
@@ -21,8 +26,10 @@ const eventSchema = z.object({
   onlineUrl: onlineUrlSchema,
   dates: z.array(occurrenceSchema).max(100).optional(),
   price: z.string().trim().max(80).optional(),
+  priceEn: z.string().trim().max(80).nullable().optional(),
   website: z.string().url().optional().or(z.literal("")),
   contactEmail: z.string().email().optional().or(z.literal("")),
+  requireAccount: z.boolean().optional(),
 });
 
 export async function GET(request: Request) {
@@ -58,8 +65,9 @@ export async function POST(request: Request) {
   const parsed = eventSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Controlla i campi obbligatori del modulo." }, { status: 400 });
 
-  const session = await auth();
+  const user = await getCurrentUser();
   const data = parsed.data;
+  if (data.requireAccount && !user) return NextResponse.json({ error: "Accedi per inviare un evento." }, { status: 401 });
   const dates = data.dates ?? (data.startsAt ? [{ startsAt: data.startsAt, endsAt: data.endsAt }] : []);
   const input = { eventType: data.eventType, dates, comuneId: data.comuneId, location: data.city, province: data.province, venue: data.venue, onlineUrl: data.onlineUrl };
   const scheduleError = validateSchedule(input);
@@ -72,17 +80,22 @@ export async function POST(request: Request) {
   const event = await prisma.event.create({
     data: {
       title: data.title,
+      titleEn: data.titleEn || null,
       slug,
       description: data.description,
+      descriptionEn: data.descriptionEn || null,
       category: data.category,
+      subcategory: data.subcategory || null,
+      subcategoryEn: data.subcategoryEn || null,
       ...eventSchedule,
       ...(data.eventType === "MULTI_LOCATION" ? { address: eventDates[0].address, latitude: eventDates[0].latitude, longitude: eventDates[0].longitude } : {}),
       dates: { create: eventDates },
       price: data.price || null,
+      priceEn: data.priceEn || null,
       website: data.website || null,
       contactEmail: data.contactEmail || null,
       status: EventStatus.PENDING,
-      organizerId: session?.user?.id || null,
+      organizerId: user?.id || null,
     },
     select: { id: true, slug: true, status: true },
   });

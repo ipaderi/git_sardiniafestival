@@ -19,11 +19,12 @@ type Props = {
   center?: [number, number];
   zoom?: number;
   className?: string;
+  locale?: string;
 };
 
 const SARDINIA_CENTER: [number, number] = [40.08, 9.0];
 
-export function EventMap({ markers, center, zoom = 7.6, className = "" }: Props) {
+export function EventMap({ markers, center, zoom = 7.6, className = "", locale = "it" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
 
@@ -63,7 +64,7 @@ export function EventMap({ markers, center, zoom = 7.6, className = "" }: Props)
       for (const group of locations) {
         const marker = L.marker([group[0].latitude, group[0].longitude], {
           icon: pointIcon,
-          title: group.length === 1 ? group[0].title : `${group.length} luoghi ed eventi`,
+          title: group.length === 1 ? group[0].title : `${group.length} ${locale === "en" ? "places and events" : "luoghi ed eventi"}`,
         }).addTo(map);
         const popup = document.createElement("div");
         popup.className = "sf-map-popup";
@@ -74,14 +75,14 @@ export function EventMap({ markers, center, zoom = 7.6, className = "" }: Props)
           if (index) item.style.marginTop = "12px";
           const kind = document.createElement("span");
           kind.className = "sf-map-popup__eyebrow";
-          kind.textContent = point.kind === "poi" ? "Punto di interesse" : "Evento";
+          kind.textContent = point.kind === "poi" ? (locale === "en" ? "Point of interest" : "Punto di interesse") : (locale === "en" ? "Event" : "Evento");
           const link = document.createElement("a");
           link.className = "sf-map-popup__title";
           link.href = point.href;
           link.textContent = point.title;
           const place = document.createElement("span");
           place.className = "sf-map-popup__place";
-          place.textContent = [point.place, point.approximate ? "Posizione approssimativa: centro del comune" : ""].filter(Boolean).join(" · ");
+          place.textContent = [point.place, point.approximate ? (locale === "en" ? "Approximate location: town centre" : "Posizione approssimativa: centro del comune") : ""].filter(Boolean).join(" · ");
           item.append(kind, link, place);
           popup.append(item);
         }
@@ -111,7 +112,7 @@ export function EventMap({ markers, center, zoom = 7.6, className = "" }: Props)
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [markers, center, zoom]);
+  }, [markers, center, zoom, locale]);
 
-  return <div ref={containerRef} role="application" aria-label="Mappa interattiva degli eventi e dei luoghi in Sardegna" className={`event-map ${className}`} />;
+  return <div ref={containerRef} role="application" aria-label={locale === "en" ? "Interactive map of events and places in Sardinia" : "Mappa interattiva degli eventi e dei luoghi in Sardegna"} className={`event-map ${className}`} />;
 }

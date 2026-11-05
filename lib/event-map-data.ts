@@ -17,7 +17,7 @@ function validCoordinates(point: Coordinates | null | undefined): point is { lat
 }
 
 /** Resolve map points only for the events already selected by the page filters. */
-export async function getEventMapMarkers(eventIds: string[], filters: { city?: string; from?: string } = {}): Promise<EventMapMarker[]> {
+export async function getEventMapMarkers(eventIds: string[], filters: { city?: string; from?: string; locale?: string } = {}): Promise<EventMapMarker[]> {
   if (!eventIds.length) return [];
   try {
     const events = await prisma.event.findMany({
@@ -59,7 +59,7 @@ export async function getEventMapMarkers(eventIds: string[], filters: { city?: s
         markers.push({
           id: `${event.id}-${place.id}`, title: event.title,
           place: [place.venue, place.address, place.city].filter(Boolean).join(", "),
-          href: `/eventi/${event.slug}`, latitude: point.latitude, longitude: point.longitude,
+          href: `/${filters.locale || "it"}/event/${event.slug}`, latitude: point.latitude, longitude: point.longitude,
           approximate: !exact,
         });
       }

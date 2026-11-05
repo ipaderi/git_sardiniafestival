@@ -13,5 +13,5 @@ export function slugifyComune(value: string) {
 }
 
 export function comuneSeoPath(slug: string, type: "eventi" | "sagre") {
-  return `/${type}-a/${slug}`;
+  return type === "eventi" ? `/citta/${slug}` : `/sagre-a/${slug}`;
 }

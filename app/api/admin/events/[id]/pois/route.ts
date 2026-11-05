@@ -5,7 +5,9 @@ import { prisma } from "@/lib/prisma";
 
 const poiSchema = z.object({
   name: z.string().trim().min(2).max(120),
+  nameEn: z.string().trim().max(120).nullable().optional(),
   description: z.string().trim().max(2000).nullable(),
+  descriptionEn: z.string().trim().max(2000).nullable().optional(),
   address: z.string().trim().max(240).nullable(),
   latitude: z.number().finite().min(-90).max(90).nullable(),
   longitude: z.number().finite().min(-180).max(180).nullable(),
@@ -34,7 +36,7 @@ export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
   const event = await prisma.event.findUnique({ where: { id }, select: { id: true } });
   if (!event) return missing();
-  const poi = await prisma.eventPoi.create({ data: { ...input.data, description: input.data.description || null, address: input.data.address || null, eventId: id } });
+  const poi = await prisma.eventPoi.create({ data: { ...input.data, nameEn: input.data.nameEn || null, description: input.data.description || null, descriptionEn: input.data.descriptionEn || null, address: input.data.address || null, eventId: id } });
   return NextResponse.json({ poi }, { status: 201 });
 }
 
@@ -44,7 +46,7 @@ export async function PATCH(request: Request, { params }: Context) {
   if (!input.success) return NextResponse.json({ error: "Controlla i campi e le coordinate del punto di interesse." }, { status: 400 });
   const { id } = await params;
   const { poi } = input.data;
-  const result = await prisma.eventPoi.updateMany({ where: { id: input.data.id, eventId: id }, data: { ...poi, description: poi.description || null, address: poi.address || null } });
+  const result = await prisma.eventPoi.updateMany({ where: { id: input.data.id, eventId: id }, data: { ...poi, ...(poi.nameEn !== undefined ? { nameEn: poi.nameEn || null } : {}), description: poi.description || null, ...(poi.descriptionEn !== undefined ? { descriptionEn: poi.descriptionEn || null } : {}), address: poi.address || null } });
   if (!result.count) return NextResponse.json({ error: "Punto di interesse non trovato." }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

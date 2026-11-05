@@ -16,3 +16,9 @@ export function slugifyCategory(value: string) {
 export function findCategoryBySlug(slug: string) {
   return eventCategories.find((category) => slugifyCategory(category.name) === slug);
 }
+
+export function categoryName(name: string, locale: string) {
+  if (locale !== "en") return name;
+  const translations: Record<string, string> = { Musica: "Music", Tradizione: "Traditions", Teatro: "Theatre", "Arte & cultura": "Art & culture", Sport: "Sport", "Food & wine": "Food & wine", Natura: "Nature", Altro: "Other" };
+  return translations[name] ?? name;
+}

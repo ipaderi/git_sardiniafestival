@@ -9,7 +9,7 @@ type Context = { params: Promise<{ id: string; imageId: string }> };
 export async function PATCH(request: Request, { params }: Context) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Non autorizzato." }, { status: 403 });
   const { id, imageId } = await params;
-  const parsed = z.object({ cover: z.literal(true).optional(), alt: z.string().trim().max(180).optional() }).strict().safeParse(await request.json().catch(() => null));
+  const parsed = z.object({ cover: z.literal(true).optional(), alt: z.string().trim().max(180).optional(), altEn: z.string().trim().max(180).nullable().optional() }).strict().safeParse(await request.json().catch(() => null));
   if (!parsed.success || !Object.keys(parsed.data).length) return NextResponse.json({ error: "Modifica non valida." }, { status: 400 });
   const image = await prisma.eventImage.findFirst({ where: { id: imageId, eventId: id } });
   if (!image) return NextResponse.json({ error: "Immagine non trovata." }, { status: 404 });
@@ -18,7 +18,7 @@ export async function PATCH(request: Request, { params }: Context) {
       await tx.eventImage.updateMany({ where: { eventId: id }, data: { isCover: false } });
       await tx.event.update({ where: { id }, data: { image: `/api/images/${imageId}` } });
     }
-    await tx.eventImage.update({ where: { id: imageId }, data: { ...(parsed.data.cover ? { isCover: true } : {}), ...(parsed.data.alt !== undefined ? { alt: parsed.data.alt || null } : {}) } });
+    await tx.eventImage.update({ where: { id: imageId }, data: { ...(parsed.data.cover ? { isCover: true } : {}), ...(parsed.data.alt !== undefined ? { alt: parsed.data.alt || null } : {}), ...(parsed.data.altEn !== undefined ? { altEn: parsed.data.altEn || null } : {}) } });
   });
   return NextResponse.json({ ok: true });
 }

@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { emptyScheduleDate, EventScheduleFields, serializeSchedule, validateSchedule, type EventType } from "@/components/events/event-schedule-fields";
 import { ComuneSelect } from "@/components/site/comune-select";
+import { eventCategories } from "@/lib/event-categories";
 
-const categories = ["Musica", "Tradizione", "Teatro", "Arte & cultura", "Sport", "Food & wine", "Natura", "Altro"];
+const categories = eventCategories.map((category) => category.name);
 
 export function SubmitEventForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");

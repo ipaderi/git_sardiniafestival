@@ -20,19 +20,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user?.isActive || !user.password || (user.role !== "ADMIN" && !user.emailVerified) || !(await compare(password, user.password))) return null;
-        return { id: user.id, name: user.name, email: user.email, image: user.image, role: user.role };
+        return { id: user.id, name: user.name, email: user.email, image: user.image, role: user.role, sessionVersion: user.sessionVersion };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.role = user.role;
+      if (user) {
+        token.role = user.role;
+        token.sessionVersion = user.sessionVersion;
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub ?? "";
         session.user.role = token.role === "ADMIN" ? "ADMIN" : "USER";
+        session.user.sessionVersion = typeof token.sessionVersion === "number" ? token.sessionVersion : 0;
       }
       return session;
     },

@@ -9,6 +9,7 @@ const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email().max(160),
   password: z.string().min(8).max(100),
+  locale: z.enum(["it", "en"]).default("it"),
 });
 
 export async function POST(request: Request) {
@@ -32,8 +33,9 @@ export async function POST(request: Request) {
   const site = process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "http://localhost:3000";
   const verificationUrl = new URL("/api/auth/verify", site);
   verificationUrl.searchParams.set("token", token);
+  verificationUrl.searchParams.set("locale", parsed.data.locale);
   try {
-    await sendVerificationEmail(normalizedEmail, name, verificationUrl.toString());
+    await sendVerificationEmail(normalizedEmail, name, verificationUrl.toString(), parsed.data.locale);
     return NextResponse.json({ message: "Account creato. Ti abbiamo inviato un link valido 24 ore per verificare l'indirizzo email." }, { status: 201 });
   } catch {
     return NextResponse.json({ message: "Account creato. L'invio dell'email non è riuscito: puoi richiedere un nuovo link dalla pagina di accesso.", resend: true }, { status: 201 });

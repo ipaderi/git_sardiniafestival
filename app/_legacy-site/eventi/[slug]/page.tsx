@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ExternalLink, Globe2, MapPin, Ticket } from "lucide-react";
 import { EventMap, type EventMapMarker } from "@/components/site/event-map";
 import { prisma } from "@/lib/prisma";
+import { eventCategories, slugifyCategory } from "@/lib/event-categories";
 
 type Props = { params: Promise<{ slug: string }> };
 export const dynamic = "force-dynamic";
@@ -105,13 +106,14 @@ export default async function EventDetailPage({ params }: Props) {
   const dateHeading = dates.length === 1 ? displayDate(dates[0].startsAt) : `${dates.length} appuntamenti`;
   const typeLabel = { SINGLE_DAY: "Evento di un giorno", MULTI_DAY: "Evento su più giorni", MULTI_LOCATION: "Evento su più giorni e sedi", ONLINE: "Evento online" }[event.eventType];
   const categoryIsSagra = event.category.toLowerCase() === "tradizione" || event.subcategory?.toLowerCase().includes("sagr");
+  const knownCategory = eventCategories.find((category) => category.name.toLocaleLowerCase("it-IT") === event.category.toLocaleLowerCase("it-IT"));
 
   return (
     <main className="pb-16">
       <div className="mx-auto max-w-7xl px-5 pt-7 lg:px-8"><Link href="/eventi" className="focus-ring inline-flex items-center gap-2 rounded text-sm font-semibold text-muted hover:text-sea"><ArrowLeft size={16} /> Torna agli eventi</Link></div>
       <div className="mx-auto mt-5 grid max-w-7xl gap-8 px-5 lg:grid-cols-[1.3fr_.7fr] lg:px-8">
         <article>
-          <div className="relative aspect-[1.85/1] overflow-hidden rounded-3xl bg-gradient-to-br from-[#0b4560] via-[#087c78] to-[#e0a776]"><span className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.28),transparent_28%)]" />{cover && <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover" />}<span className="absolute bottom-4 left-4 rounded-full bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-[.12em] text-sea">{event.category}</span></div>
+          <div className="relative aspect-[1.85/1] overflow-hidden rounded-3xl bg-gradient-to-br from-[#0b4560] via-[#087c78] to-[#e0a776]"><span className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.28),transparent_28%)]" />{cover && <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover" />}{knownCategory ? <Link href={`/categorie/${slugifyCategory(knownCategory.name)}`} className="focus-ring absolute bottom-4 left-4 rounded-full bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-[.12em] text-sea">{event.category}</Link> : <span className="absolute bottom-4 left-4 rounded-full bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-[.12em] text-sea">{event.category}</span>}</div>
           <div className="mt-7">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-coral">{dateHeading}</p>
             <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-.045em] text-ink md:text-5xl">{event.title}</h1>
@@ -140,7 +142,7 @@ export default async function EventDetailPage({ params }: Props) {
               const query = [place.venue, place.address, place.city, place.province, "Italia"].filter(Boolean).join(", ");
               return <li key={`${place.city}-${place.venue}-${index}`} id={`sede-${index}`} className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="flex items-start gap-2 text-sm font-semibold text-ink"><MapPin size={17} className="mt-0.5 shrink-0 text-sea" />{[place.venue, place.address, place.city, place.province && `(${place.province})`].filter(Boolean).join(", ")}</p>
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-sea"><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-ink">Apri in Google Maps <ExternalLink size={13} /></a>{place.citySlug && <Link href={`/citta/${place.citySlug}`} className="hover:text-ink">Eventi a {place.city}</Link>}{place.citySlug && categoryIsSagra && <Link href={`/sagre-a/${place.citySlug}`} className="hover:text-ink">Sagre e feste a {place.city}</Link>}</div>
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-sea"><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-ink">Apri in Google Maps <ExternalLink size={13} /></a>{place.citySlug && <Link href={`/citta/${place.citySlug}`} className="hover:text-ink">Eventi a {place.city}</Link>}{place.citySlug && knownCategory && <Link href={`/citta/${place.citySlug}/${slugifyCategory(knownCategory.name)}`} className="hover:text-ink">{knownCategory.name} a {place.city}</Link>}{place.citySlug && categoryIsSagra && <Link href={`/sagre-a/${place.citySlug}`} className="hover:text-ink">Sagre e feste a {place.city}</Link>}</div>
               </li>;
             })}</ul>
           </section>}

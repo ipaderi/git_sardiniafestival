@@ -23,8 +23,8 @@ function IslandGraphic({ events }: { events: FestivalEvent[] }) {
   return (
     <div className="relative mx-auto flex h-[350px] w-full max-w-[460px] items-center justify-center md:h-[430px]">
       <div className="absolute inset-3 rounded-full bg-[#16a6a0]/10 blur-3xl" />
-      <div className="absolute left-1/2 top-1/2 h-[84%] aspect-[300/370] -translate-x-1/2 -translate-y-1/2">
-        <img src="/brand/sardinia-outline.svg" alt="Profilo geografico della Sardegna" className="h-full w-full object-contain drop-shadow-[0_16px_22px_rgba(0,20,37,.2)]" />
+      <div className="relative h-[84%] shrink-0 aspect-[316/386]">
+        <img src="/brand/sardinia-outline.svg" alt="Profilo geografico della Sardegna" className="h-full w-auto max-w-full drop-shadow-[0_16px_22px_rgba(0,20,37,.2)]" />
         {mapEvents.map((event) => {
           const left = ((event.longitude! - 8.1338) / (9.8267 - 8.1338)) * 100;
           const top = ((41.2626 - event.latitude!) / (41.2626 - 38.8643)) * 100;
@@ -75,7 +75,7 @@ export default async function HomePage() {
 
       <section id="territori" className="bg-[#f2f1eb] py-14 md:py-16">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-7 flex items-end justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[.18em] text-sea">In primo piano</p><h2 className="mt-2 font-display text-3xl font-semibold tracking-[-.04em] text-ink">Città da scoprire.</h2></div><Link href="/eventi" className="hidden items-center gap-1 text-sm font-bold text-sea sm:flex">Apri la mappa <ArrowRight size={16} /></Link></div>
+          <div className="mb-7 flex items-end justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[.18em] text-sea">In primo piano</p><h2 className="mt-2 font-display text-3xl font-semibold tracking-[-.04em] text-ink">Città da scoprire.</h2></div><Link href="/citta" className="inline-flex items-center gap-1 text-sm font-bold text-sea">Tutte le città <ArrowRight size={16} /></Link></div>
           {cities.length > 0 ? <div className="grid gap-4 md:grid-cols-3">{cities.map((city) => {
             const comuneSlug = comuneSlugByName.get(slugifyComune(city.name));
             const href = comuneSlug ? `/citta/${comuneSlug}` : `/eventi?city=${encodeURIComponent(city.name)}`;

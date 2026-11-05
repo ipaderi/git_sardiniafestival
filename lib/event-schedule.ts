@@ -32,6 +32,7 @@ export async function prepareSchedule(schedule: ScheduleInput) {
       startsAt: new Date(date.startsAt),
       endsAt: date.endsAt ? new Date(date.endsAt) : null,
       label: textOrNull(date.label),
+      labelEn: textOrNull(date.labelEn),
       city: isMultiLocation && date.comuneId ? comuniById.get(date.comuneId)?.name ?? null : null,
       province: isMultiLocation && date.comuneId ? comuniById.get(date.comuneId)?.provinceCode ?? null : null,
       venue: isMultiLocation ? textOrNull(date.venue) : null,

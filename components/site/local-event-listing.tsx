@@ -3,19 +3,22 @@ import { ArrowLeft, ArrowRight, CalendarDays, MapPin } from "lucide-react";
 import { EventCard } from "@/components/site/event-card";
 import type { FestivalEvent } from "@/lib/public-events";
 import type { LocalListingType } from "@/lib/local-events";
+import { eventCategories, slugifyCategory } from "@/lib/event-categories";
 
 type LocalEventListingProps = {
   type: LocalListingType;
   comune: { name: string; slug: string; provinceCode: string; provinceName: string; latitude: number; longitude: number };
   events: FestivalEvent[];
+  category?: (typeof eventCategories)[number];
+  allEvents?: FestivalEvent[];
 };
 
-export function LocalEventListing({ type, comune, events }: LocalEventListingProps) {
+export function LocalEventListing({ type, comune, events, category, allEvents = events }: LocalEventListingProps) {
   const isSagre = type === "sagre";
-  const pageTitle = isSagre ? `Sagre e feste a ${comune.name}` : `Eventi a ${comune.name}`;
-  const alternateLabel = isSagre ? `Tutti gli eventi a ${comune.name}` : `Sagre e feste a ${comune.name}`;
-  const alternateHref = isSagre ? `/citta/${comune.slug}` : `/sagre-a/${comune.slug}`;
-  const pagePath = isSagre ? `/sagre-a/${comune.slug}` : `/citta/${comune.slug}`;
+  const pageTitle = category ? `${category.name} a ${comune.name}` : isSagre ? `Sagre e feste a ${comune.name}` : `Eventi a ${comune.name}`;
+  const alternateLabel = isSagre || category ? `Tutti gli eventi a ${comune.name}` : `Sagre e feste a ${comune.name}`;
+  const alternateHref = isSagre || category ? `/citta/${comune.slug}` : `/sagre-a/${comune.slug}`;
+  const pagePath = category ? `/citta/${comune.slug}/${slugifyCategory(category.name)}` : isSagre ? `/sagre-a/${comune.slug}` : `/citta/${comune.slug}`;
   const now = Date.now();
   const isUpcoming = (event: FestivalEvent) => {
     const localDates = event.eventType === "MULTI_LOCATION"
@@ -48,8 +51,9 @@ export function LocalEventListing({ type, comune, events }: LocalEventListingPro
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: siteBase },
-          { "@type": "ListItem", position: 2, name: "Eventi in Sardegna", item: `${siteBase}/eventi` },
-          { "@type": "ListItem", position: 3, name: pageTitle, item: `${siteBase}${pagePath}` },
+          { "@type": "ListItem", position: 2, name: "Città", item: `${siteBase}/citta` },
+          ...(category || isSagre ? [{ "@type": "ListItem", position: 3, name: `Eventi a ${comune.name}`, item: `${siteBase}/citta/${comune.slug}` }] : []),
+          { "@type": "ListItem", position: category || isSagre ? 4 : 3, name: pageTitle, item: `${siteBase}${pagePath}` },
         ],
       },
     ],
@@ -60,7 +64,8 @@ export function LocalEventListing({ type, comune, events }: LocalEventListingPro
       <div className="mx-auto max-w-7xl">
         <nav aria-label="Percorso" className="flex flex-wrap items-center gap-2 text-xs font-semibold text-muted">
           <Link href="/" className="hover:text-sea">Home</Link><span aria-hidden="true">/</span>
-          <Link href="/eventi" className="hover:text-sea">Eventi in Sardegna</Link><span aria-hidden="true">/</span>
+          <Link href="/citta" className="hover:text-sea">Città</Link><span aria-hidden="true">/</span>
+          {(category || isSagre) && <><Link href={`/citta/${comune.slug}`} className="hover:text-sea">{comune.name}</Link><span aria-hidden="true">/</span></>}
           <span aria-current="page" className="text-ink">{pageTitle}</span>
         </nav>
 
@@ -72,7 +77,7 @@ export function LocalEventListing({ type, comune, events }: LocalEventListingPro
             <p className="mt-4 max-w-2xl text-sm leading-6 text-blue-100/80">
               {events.length
                 ? `${events.length} ${isSagre ? "appuntamenti tra sagre e feste" : "eventi pubblicati"} a ${comune.name}. Date, luoghi e dettagli degli eventi su SardiniaFestival.`
-                : `Il calendario ${isSagre ? "di sagre e feste" : "degli eventi"} a ${comune.name} si sta aggiornando. Al momento non ci sono appuntamenti futuri pubblicati.`}
+                : `Il calendario ${category ? `di ${category.name}` : isSagre ? "di sagre e feste" : "degli eventi"} a ${comune.name} si sta aggiornando. Al momento non ci sono eventi pubblicati.`}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link href={alternateHref} className="focus-ring inline-flex items-center gap-2 rounded-xl bg-sea-bright px-4 py-3 text-sm font-bold text-ink"><CalendarDays size={16} /> {alternateLabel}</Link>
@@ -80,6 +85,20 @@ export function LocalEventListing({ type, comune, events }: LocalEventListingPro
             </div>
           </div>
         </section>
+
+        {!isSagre && <section aria-labelledby="local-categories" className="mt-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div><p className="text-[11px] font-bold uppercase tracking-[.17em] text-sea">Esplora per categoria</p><h2 id="local-categories" className="mt-2 font-display text-2xl font-semibold tracking-[-.035em] text-ink">Cosa cerchi a {comune.name}?</h2></div>
+            {category && <Link href={`/citta/${comune.slug}`} className="focus-ring rounded text-sm font-semibold text-sea hover:text-ink">Tutti gli eventi</Link>}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {eventCategories.map((item) => {
+              const count = allEvents.filter((event) => event.category.toLocaleLowerCase("it-IT") === item.name.toLocaleLowerCase("it-IT")).length;
+              const active = category?.name === item.name;
+              return <Link key={item.name} href={`/citta/${comune.slug}/${slugifyCategory(item.name)}`} aria-current={active ? "page" : undefined} className={`focus-ring flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${active ? "border-sea bg-[#e7f5f2] text-sea" : "border-slate-200 bg-white text-ink hover:border-sea hover:text-sea"}`}><span>{item.name}</span><span className="shrink-0 text-xs font-medium text-muted">{count}</span></Link>;
+            })}
+          </div>
+        </section>}
 
         <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>

@@ -10,6 +10,7 @@ export const occurrenceSchema = z.object({
   startsAt: z.string().datetime(),
   endsAt: optionalDate,
   label: optionalText(120),
+  labelEn: optionalText(120),
   city: optionalText(80),
   province: optionalText(3),
   venue: optionalText(120),

@@ -1,28 +1,28 @@
 import type { Metadata } from "next";
 import { DM_Sans, Outfit } from "next/font/google";
+import { getRequestLocale } from "@/lib/i18n-server";
 import "./globals.css";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sardiniafestival.com"),
-  title: { default: "SardiniaFestival — Eventi in Sardegna", template: "%s | SardiniaFestival" },
-  description: "Trova festival, concerti, sagre, spettacoli e appuntamenti in Sardegna. La tua prossima storia comincia qui.",
-  applicationName: "SardiniaFestival",
-  openGraph: {
-    type: "website",
-    locale: "it_IT",
-    siteName: "SardiniaFestival",
-    title: "SardiniaFestival — Eventi in Sardegna",
-    description: "Scopri cosa succede in Sardegna: festival, musica, tradizioni e cultura.",
-  },
-  twitter: { card: "summary_large_image", title: "SardiniaFestival — Eventi in Sardegna", description: "Scopri gli eventi dell'isola." },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const title = locale === "it" ? "SardiniaFestival — Eventi in Sardegna" : "SardiniaFestival — Events in Sardinia";
+  const description = locale === "it" ? "Trova festival, concerti, sagre, spettacoli e appuntamenti in Sardegna." : "Discover festivals, concerts, traditions and events across Sardinia.";
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sardiniafestival.com"),
+    title: { default: title, template: "%s | SardiniaFestival" }, description,
+    applicationName: "SardiniaFestival",
+    openGraph: { type: "website", locale: locale === "it" ? "it_IT" : "en_GB", siteName: "SardiniaFestival", title, description },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getRequestLocale();
   return (
-    <html lang="it">
+    <html lang={locale}>
       <body className={`${dmSans.variable} ${outfit.variable} antialiased`}>{children}</body>
     </html>
   );

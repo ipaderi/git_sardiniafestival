@@ -37,9 +37,11 @@ type Props = {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  locale?: string;
 };
 
-export function ComuneSelect({ name, id, value, defaultValue, defaultName, onChange, required, disabled, className }: Props) {
+export function ComuneSelect({ name, id, value, defaultValue, defaultName, onChange, required, disabled, className, locale }: Props) {
+  const en = locale === "en";
   const [comuni, setComuni] = useState<ComuneOption[]>([]);
   const [selection, setSelection] = useState(defaultValue ?? "");
   const [error, setError] = useState(false);
@@ -72,9 +74,9 @@ export function ComuneSelect({ name, id, value, defaultValue, defaultName, onCha
       setSelection(event.target.value);
       onChange?.(selected);
     }}>
-      <option value="">{loading ? "Caricamento comuni…" : error ? "Comuni non disponibili" : "Seleziona un comune"}</option>
+      <option value="">{loading ? (en ? "Loading municipalities…" : "Caricamento comuni…") : error ? (en ? "Municipalities unavailable" : "Comuni non disponibili") : (en ? "Select a municipality" : "Seleziona un comune")}</option>
       {comuni.map((comune) => <option key={comune.id} value={comune.id}>{comune.name} ({comune.provinceCode})</option>)}
     </select>
-    {error && <button type="button" className="mt-1 text-xs font-semibold text-rose-700 underline" onClick={() => setAttempt((current) => current + 1)}>Riprova a caricare i comuni</button>}
+    {error && <button type="button" className="mt-1 text-xs font-semibold text-rose-700 underline" onClick={() => setAttempt((current) => current + 1)}>{en ? "Retry loading municipalities" : "Riprova a caricare i comuni"}</button>}
   </span>;
 }

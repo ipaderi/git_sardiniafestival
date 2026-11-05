@@ -6,6 +6,7 @@ import { signIn, signOut } from "next-auth/react";
 import { ArrowRight, LoaderCircle, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLocale } from "@/lib/use-locale";
 
 export function SignInForm({ callbackUrl = "/dashboard" }: { callbackUrl?: string }) {
   const [error, setError] = useState("");
@@ -41,5 +42,6 @@ export function RegisterForm() {
 }
 
 export function SignOutButton() {
-  return <button className="focus-ring rounded-lg px-3 py-2 text-xs font-bold text-muted hover:bg-slate-100 hover:text-ink" onClick={() => signOut({ redirectTo: "/" })}>Esci</button>;
+  const locale = useLocale();
+  return <button className="focus-ring rounded-lg px-3 py-2 text-xs font-bold text-muted hover:bg-slate-100 hover:text-ink" onClick={() => signOut({ redirectTo: `/${locale}` })}>{locale === "en" ? "Sign out" : "Esci"}</button>;
 }

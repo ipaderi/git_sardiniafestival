@@ -33,6 +33,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  sessionVersion Int      @default(0)
   role          Role      @default(USER)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
@@ -51,13 +52,27 @@ model EmailVerificationToken {
   @@index([expiresAt])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
 model Event {
   id           String       @id @default(cuid())
   title        String
+  titleEn      String?
   slug         String       @unique
   description  String       @db.Text
+  descriptionEn String?     @db.Text
   category     String
   subcategory  String?
+  subcategoryEn String?
   location     String?
   province     String?
   venue        String?
@@ -72,6 +87,7 @@ model Event {
   onlineUrl    String?
   contactEmail String?
   price        String?
+  priceEn      String?
   status       EventStatus  @default(PENDING)
   featured     Boolean      @default(false)
   comuneId     String?
@@ -114,6 +130,7 @@ model EventDate {
   startsAt  DateTime
   endsAt    DateTime?
   label     String?
+  labelEn   String?
   city      String?
   province  String?
   venue     String?
@@ -136,6 +153,7 @@ model EventImage {
   objectKey   String   @unique
   contentType String
   alt         String?
+  altEn       String?
   isCover     Boolean  @default(false)
   sortOrder   Int      @default(0)
   event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -148,7 +166,9 @@ model EventPoi {
   id          String   @id @default(cuid())
   eventId     String
   name        String
+  nameEn      String?
   description String?
+  descriptionEn String?
   address     String?
   latitude    Float?
   longitude   Float?
@@ -165,6 +185,7 @@ model FeaturedCity {
   slug        String   @unique
   province    String
   description String   @db.Text
+  descriptionEn String? @db.Text
   imageUrl    String?
   featured    Boolean  @default(false)
   sortOrder   Int      @default(0)
