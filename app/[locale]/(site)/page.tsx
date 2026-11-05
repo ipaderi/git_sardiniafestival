@@ -8,6 +8,7 @@ import { HeroProvinceMap } from "@/components/site/hero-province-map";
 import { EventCard } from "@/components/site/event-card";
 import { SearchForm } from "@/components/site/search-form";
 import { categoryName, eventCategories, slugifyCategory } from "@/lib/event-categories";
+import { FEATURED_CITY_HOME_SLOTS } from "@/lib/featured-cities";
 import { getPublicEvents } from "@/lib/public-events";
 import { prisma } from "@/lib/prisma";
 import { slugifyComune } from "@/lib/comuni";
@@ -19,7 +20,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const [upcoming, featuredCities] = await Promise.all([
     getPublicEvents({ upcomingOnly: true, locale }),
-    prisma.featuredCity.findMany({ where: { featured: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], take: 3 }).catch(() => []),
+    prisma.featuredCity.findMany({ where: { featured: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], take: FEATURED_CITY_HOME_SLOTS }).catch(() => []),
   ]);
   const events = upcoming.slice(0, 3);
   const citySlugs = featuredCities.map((city) => slugifyComune(city.name));
