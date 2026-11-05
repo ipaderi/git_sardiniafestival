@@ -8,3 +8,7 @@ applied by the React component. The file name corresponds to the
 credited there to Vonvikken (original) and Arrow303 (derivative) and described
 as released into the public domain. The supplied file has no embedded license
 or attribution metadata.
+
+The source SVG nests the main Sulcis-Iglesiente polygon under the Cagliari
+group. In `sardinia-provinces.json` that path is assigned to
+`Carbonia-Iglesias`, so the map hover and link follow the province boundary.
