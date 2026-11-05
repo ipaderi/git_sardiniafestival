@@ -4,16 +4,15 @@ import { dictionary, interpolate } from "@/lib/dictionary";
 import adminIt from "@/messages/it/admin.json";
 import adminEn from "@/messages/en/admin.json";
 
-import { useState } from "react";
-import { ChevronDown, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
+import { Field, FormSection, inputClass, textareaClass } from "@/components/admin/event-form-fields";
 
 type Poi = { id: string; name: string; nameEn: string | null; description: string | null; descriptionEn: string | null; address: string | null; latitude: number | null; longitude: number | null };
 type Draft = { name: string; nameEn: string; description: string; descriptionEn: string; address: string; latitude: string; longitude: string };
 const emptyDraft: Draft = { name: "", nameEn: "", description: "", descriptionEn: "", address: "", latitude: "", longitude: "" };
-const inputClass = "focus-ring h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal text-ink";
-const labelClass = "grid gap-1.5 text-[11px] font-bold text-ink";
 
 export function EventPoiManagement({ eventId, locale = "it" }: { eventId: string; locale?: string }) {
   const t = dictionary(locale, adminIt, adminEn).poi;
@@ -36,6 +35,8 @@ export function EventPoiManagement({ eventId, locale = "it" }: { eventId: string
       setError(cause instanceof Error ? cause.message : t.unableToLoadPointsOfInterest);
     } finally { setBusy(false); }
   }
+
+  useEffect(() => { void load(); }, [endpoint]);
 
   function edit(poi?: Poi) {
     setError("");
@@ -77,25 +78,21 @@ export function EventPoiManagement({ eventId, locale = "it" }: { eventId: string
     } finally { setBusy(false); }
   }
 
-  return <details className="mt-3" onToggle={(event) => { if (event.currentTarget.open && pois === null && !busy) void load(); }}>
-    <summary className="focus-ring inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs font-bold text-sea hover:text-ink"><MapPin size={13} /> {t.pointsOfInterest} <ChevronDown size={14} /></summary>
-    <div className="mt-3 rounded-xl bg-slate-50 p-4">
-      {error && <p role="alert" className="mb-3 text-xs text-rose-700">{error}</p>}
-      {pois === null ? <div className="text-xs text-muted">{busy ? (t.loading) : <button type="button" onClick={() => void load()} className="font-bold text-sea">{t.tryAgain}</button>}</div> : <>
-        {pois.length ? <ul className="space-y-2">{pois.map((poi) => <li key={poi.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white p-3"><div><p className="text-xs font-bold text-ink">{poi.name}</p>{poi.address && <p className="mt-1 text-xs text-muted">{poi.address}</p>}{poi.latitude !== null && poi.longitude !== null && <p className="mt-1 text-[11px] text-muted">{poi.latitude}, {poi.longitude}</p>}</div><div className="flex gap-1"><Button type="button" size="icon" variant="ghost" aria-label={`${t.edit} ${poi.name}`} disabled={busy} onClick={() => edit(poi)}><Pencil size={14} /></Button><Button type="button" size="icon" variant="ghost" aria-label={`${t.delete} ${poi.name}`} disabled={busy} onClick={() => void remove(poi)}><Trash2 size={14} className="text-rose-600" /></Button></div></li>)}</ul> : <p className="text-xs text-muted">{t.noPointsOfInterestAdded}</p>}
-        {editing === null && <Button type="button" variant="outline" size="sm" className="mt-3" disabled={busy} onClick={() => edit()}><Plus size={14} /> {t.addPoint}</Button>}
-        {editing !== null && <form onSubmit={submit} className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className={`${labelClass} sm:col-span-2`}>{t.nameItalian} *<Input className={inputClass} required minLength={2} maxLength={120} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
-          <label className={`${labelClass} sm:col-span-2`}>{t.nameEnglishOptional}<Input className={inputClass} maxLength={120} value={draft.nameEn} onChange={(event) => setDraft({ ...draft, nameEn: event.target.value })} /></label>
-          <label className={`${labelClass} sm:col-span-2`}>{t.address}<Input className={inputClass} maxLength={240} value={draft.address} onChange={(event) => setDraft({ ...draft, address: event.target.value })} /></label>
-          <label className={labelClass}>{t.latitude}<Input className={inputClass} type="number" step="any" min={-90} max={90} value={draft.latitude} onChange={(event) => setDraft({ ...draft, latitude: event.target.value })} placeholder={t.latitudeExample} /></label>
-          <label className={labelClass}>{t.longitude}<Input className={inputClass} type="number" step="any" min={-180} max={180} value={draft.longitude} onChange={(event) => setDraft({ ...draft, longitude: event.target.value })} placeholder={t.longitudeExample} /></label>
-          <p className="text-[11px] text-muted sm:col-span-2">{t.coordinatesGuidance}</p>
-          <label className={`${labelClass} sm:col-span-2`}>{t.descriptionItalian}<textarea className="focus-ring min-h-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-ink" maxLength={2000} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
-          <label className={`${labelClass} sm:col-span-2`}>{t.descriptionEnglishOptional}<textarea className="focus-ring min-h-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal text-ink" maxLength={2000} value={draft.descriptionEn} onChange={(event) => setDraft({ ...draft, descriptionEn: event.target.value })} /></label>
-          <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setEditing(null)}>{t.cancel}</Button><Button type="submit" size="sm" disabled={busy}>{t.savePoint}</Button></div>
-        </form>}
-      </>}
-    </div>
-  </details>;
+  return <FormSection id="pois" title={t.pointsOfInterest} description={t.coordinatesGuidance}>
+    {error && <p role="alert" className="mb-3 text-xs font-medium text-rose-700">{error}</p>}
+    {pois === null ? <div className="text-sm text-muted">{busy ? t.loading : <button type="button" onClick={() => void load()} className="focus-ring rounded font-bold text-sea">{t.tryAgain}</button>}</div> : <>
+      {pois.length ? <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">{pois.map((poi) => <li key={poi.id} className="flex items-center justify-between gap-2 px-3.5 py-2.5"><div className="min-w-0"><p className="text-sm font-semibold text-ink">{poi.name}</p>{poi.address && <p className="mt-0.5 text-xs text-muted">{poi.address}</p>}{poi.latitude !== null && poi.longitude !== null && <p className="mt-0.5 text-[11px] tabular-nums text-muted">{poi.latitude}, {poi.longitude}</p>}</div><div className="flex shrink-0 gap-1"><Button type="button" size="icon" variant="ghost" className="size-9" aria-label={`${t.edit} ${poi.name}`} disabled={busy} onClick={() => edit(poi)}><Pencil size={14} /></Button><Button type="button" size="icon" variant="ghost" className="size-9" aria-label={`${t.delete} ${poi.name}`} disabled={busy} onClick={() => void remove(poi)}><Trash2 size={14} className="text-rose-600" /></Button></div></li>)}</ul> : <p className="text-sm text-muted">{t.noPointsOfInterestAdded}</p>}
+      {editing === null && <div className="mt-4 text-xs font-semibold"><Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => edit()}><Plus size={14} /> {t.addPoint}</Button></div>}
+      {editing !== null && <form onSubmit={submit} className="mt-4 grid gap-4 rounded-xl bg-slate-50 p-3 sm:grid-cols-2 sm:p-4">
+        <Field label={t.nameItalian} required><Input className={inputClass} required minLength={2} maxLength={120} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></Field>
+        <Field label={t.nameEnglishOptional}><Input className={inputClass} maxLength={120} value={draft.nameEn} onChange={(event) => setDraft({ ...draft, nameEn: event.target.value })} /></Field>
+        <Field className="sm:col-span-2" label={t.address}><Input className={inputClass} maxLength={240} value={draft.address} onChange={(event) => setDraft({ ...draft, address: event.target.value })} /></Field>
+        <Field label={t.latitude}><Input className={inputClass} type="number" step="any" min={-90} max={90} value={draft.latitude} onChange={(event) => setDraft({ ...draft, latitude: event.target.value })} placeholder={t.latitudeExample} /></Field>
+        <Field label={t.longitude}><Input className={inputClass} type="number" step="any" min={-180} max={180} value={draft.longitude} onChange={(event) => setDraft({ ...draft, longitude: event.target.value })} placeholder={t.longitudeExample} /></Field>
+        <Field className="sm:col-span-2" label={t.descriptionItalian}><Textarea className={`${textareaClass} min-h-24`} maxLength={2000} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></Field>
+        <Field className="sm:col-span-2" label={t.descriptionEnglishOptional}><Textarea className={`${textareaClass} min-h-24`} maxLength={2000} value={draft.descriptionEn} onChange={(event) => setDraft({ ...draft, descriptionEn: event.target.value })} /></Field>
+        <div className="flex justify-end gap-2 text-xs font-semibold sm:col-span-2"><Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setEditing(null)}>{t.cancel}</Button><Button type="submit" size="sm" variant="dark" disabled={busy}>{t.savePoint}</Button></div>
+      </form>}
+    </>}
+  </FormSection>;
 }

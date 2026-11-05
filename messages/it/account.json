@@ -89,6 +89,7 @@
     ]
   },
   "schedule": {
+    "enterAStartDateAndTime": "Indica data e ora di inizio.",
     "enterBetween1And100Occurrences": "Inserisci da 1 a 100 appuntamenti.",
     "checkTheTimesThisTimeDoesNot": "Controlla gli orari: quello indicato non esiste nell'ora italiana, ad esempio durante il passaggio all'ora legale.",
     "anOccurrenceMustEndOnOrAfter": "La fine di un appuntamento deve essere successiva o uguale all'inizio.",
