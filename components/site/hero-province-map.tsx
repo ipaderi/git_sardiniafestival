@@ -30,7 +30,7 @@ export function HeroProvinceMap({ locale = "it" }: { locale?: string }) {
             href={`/${locale}/events/province/${province.slug}`}
             prefetch={false}
             aria-label={interpolate(dictionary(locale, publicIt, publicEn).provinceEventsTitle, { name: province.name })}
-            className={styles.province}
+            className={`${styles.province} ${active === province.code ? styles.active : ""}`}
             onPointerEnter={(event) => { if (event.pointerType !== "touch") { setActive(province.code); moveTooltip(event); } }}
             onPointerMove={moveTooltip}
             onPointerLeave={() => setActive(null)}

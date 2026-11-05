@@ -4,20 +4,12 @@
 }
 
 .provinceShape {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 180ms ease, filter 180ms ease;
+  transition: filter 180ms ease;
 }
 
-.province:hover .provinceShape,
+.province.active .provinceShape,
 .province:focus-visible .provinceShape {
-  transform: scale(1.035);
-  filter: brightness(1.15) drop-shadow(0 5px 10px rgb(0 18 33 / 35%));
-}
-
-.province:focus-visible .provinceShape {
-  stroke: #fff;
-  stroke-width: 13px;
+  filter: brightness(1.15);
 }
 
 @media (prefers-reduced-motion: reduce) {
