@@ -48,7 +48,12 @@ export async function GET(request: Request) {
   return new Response(html, { headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } });
 }
 export async function POST(request: Request) {
-  if (request.headers.get("origin") !== oauthOrigin()) return oauthError("invalid_request", 403);
+  const origin = request.headers.get("origin");
+  const isOpaqueOriginSameOriginNavigation = origin === "null"
+    && request.headers.get("sec-fetch-site") === "same-origin"
+    && request.headers.get("sec-fetch-mode") === "navigate"
+    && request.headers.get("sec-fetch-dest") === "document";
+  if (origin !== oauthOrigin() && !isOpaqueOriginSameOriginNavigation) return oauthError("invalid_request", 403);
   const user = await getCurrentUser();
   if (!user) return oauthError("access_denied", 401);
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/x-www-form-urlencoded")) return oauthError("invalid_request");
